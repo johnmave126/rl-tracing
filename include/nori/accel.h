@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include <vector>
 #include <nori/mesh.h>
 
 NORI_NAMESPACE_BEGIN
@@ -29,6 +30,32 @@ NORI_NAMESPACE_BEGIN
  * through the geometry.
  */
 class Accel {
+private:
+	typedef struct _Node {
+		union {
+			struct {
+				struct _Node* child[8];
+				BoundingBox3f subbox[8];
+			} inte;
+			std::vector<uint32_t>* triangles;
+		};
+		bool leaf;
+
+		_Node() {
+
+		}
+
+		~_Node() {
+			if (leaf) {
+				delete triangles;
+			}
+			else {
+				for (int i = 0; i < 8; ++i) {
+					delete inte.child[i];
+				}
+			}
+		}
+	} Node;
 public:
     /**
      * \brief Register a triangle mesh for inclusion in the acceleration
@@ -38,8 +65,8 @@ public:
      */
     void addMesh(Mesh *mesh);
 
-    /// Build the acceleration data structure (currently a no-op)
-    void build();
+    /// Build the acceleration data structure
+	void build();
 
     /// Return an axis-aligned box that bounds the scene
     const BoundingBox3f &getBoundingBox() const { return m_bbox; }
@@ -65,9 +92,31 @@ public:
      */
     bool rayIntersect(const Ray3f &ray, Intersection &its, bool shadowRay) const;
 
+	size_t interiors() const { return m_interior; }
+
+	size_t leaves() const { return m_leaf; }
+
+	double averageOnLeaves() const { return 1.0 * m_total / leaves(); }
+
 private:
     Mesh         *m_mesh = nullptr; ///< Mesh (only a single one for now)
     BoundingBox3f m_bbox;           ///< Bounding box of the entire scene
+	Node		 *m_root = nullptr; ///< Root of octree
+	size_t		  m_interior = 0;   ///< Number of interior nodes
+	size_t		  m_leaf = 0;		///< Number of leaf nodes
+	size_t		  m_total = 0;		///< Number of total triangles on leaf nodes
+
+	/// Build a node of octree
+	Node* buildTree(BoundingBox3f& box, std::vector<uint32_t>& triangles, uint32_t depth);
+
+	/// Return a 1/8 bounding box by index
+	static BoundingBox3f calcBoundingBox(const BoundingBox3f& box, int index);
+
+	/// Return a 1/8 bounding box by index
+	bool rayIntersectInternal(const Node* root, const BoundingBox3f& box, Ray3f &ray, Intersection &its, uint32_t &idx, bool shadowRay) const;
+
+	static const uint32_t MAX_DEPTH = 9;
+	static const size_t LEAF_SIZE = 10;
 };
 
 NORI_NAMESPACE_END

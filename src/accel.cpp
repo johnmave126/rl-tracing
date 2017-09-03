@@ -18,6 +18,7 @@
 
 #include <nori/accel.h>
 #include <Eigen/Geometry>
+#include <algorithm>
 
 NORI_NAMESPACE_BEGIN
 
@@ -29,7 +30,11 @@ void Accel::addMesh(Mesh *mesh) {
 }
 
 void Accel::build() {
-    /* Nothing to do here for now */
+	std::vector<uint32_t> all;
+	for (uint32_t idx = 0; idx < m_mesh->getTriangleCount(); ++idx) {
+		all.push_back(idx);
+	}
+	m_root = buildTree(m_bbox, all, 0);
 }
 
 bool Accel::rayIntersect(const Ray3f &ray_, Intersection &its, bool shadowRay) const {
@@ -38,21 +43,8 @@ bool Accel::rayIntersect(const Ray3f &ray_, Intersection &its, bool shadowRay) c
 
     Ray3f ray(ray_); /// Make a copy of the ray (we will need to update its '.maxt' value)
 
-    /* Brute force search through all triangles */
-    for (uint32_t idx = 0; idx < m_mesh->getTriangleCount(); ++idx) {
-        float u, v, t;
-        if (m_mesh->rayIntersect(idx, ray, u, v, t)) {
-            /* An intersection was found! Can terminate
-               immediately if this is a shadow ray query */
-            if (shadowRay)
-                return true;
-            ray.maxt = its.t = t;
-            its.uv = Point2f(u, v);
-            its.mesh = m_mesh;
-            f = idx;
-            foundIntersection = true;
-        }
-    }
+    /* Delegate to octree to find an intersection */
+	foundIntersection = rayIntersectInternal(m_root, m_bbox, ray, its, f, shadowRay);
 
     if (foundIntersection) {
         /* At this point, we now know that there is an intersection,
@@ -108,6 +100,131 @@ bool Accel::rayIntersect(const Ray3f &ray_, Intersection &its, bool shadowRay) c
     }
 
     return foundIntersection;
+}
+
+Accel::Node* Accel::buildTree(BoundingBox3f& box, std::vector<uint32_t>& triangles, uint32_t depth) {
+	Node *node = nullptr;
+	if (triangles.size() > 0) {
+		if (triangles.size() <= LEAF_SIZE || depth > MAX_DEPTH) {
+			m_leaf++;
+			m_total += triangles.size();
+			node = new Node;
+			node->leaf = true;
+			node->triangles = new std::vector<uint32_t>(std::move(triangles));
+		}
+		else {
+			m_interior++;
+			node = new Node;
+			node->leaf = false;
+			std::vector<uint32_t> candidates[8];
+			for (int i = 0; i < 8; ++i) {
+				node->inte.subbox[i] = calcBoundingBox(box, i);
+				for (std::vector<uint32_t>::iterator it = triangles.begin(); it != triangles.end(); ++it) {
+					if (node->inte.subbox[i].overlaps(m_mesh->getBoundingBox(*it))) {
+						candidates[i].push_back(*it);
+					}
+				}
+			}
+			for (int i = 0; i < 8; ++i) {
+				node->inte.child[i] = buildTree(node->inte.subbox[i], candidates[i], depth + 1);
+			}
+		}
+	}
+	return node;
+}
+
+BoundingBox3f Accel::calcBoundingBox(const BoundingBox3f& box, int index) {
+	Point3f min, max;
+	for (int i = 0; i < 3; ++i) {
+		if (index & (1<<i)) {
+			min[i] = box.min[i];
+			max[i] = (box.min[i] + box.max[i]) / 2;
+		}
+		else {
+			min[i] = (box.min[i] + box.max[i]) / 2;
+			max[i] = box.max[i];
+		}
+	}
+	return BoundingBox3f(min, max);
+}
+
+/* Any order traversal version */
+//bool Accel::rayIntersectInternal(const Accel::Node* root, const BoundingBox3f& box, Ray3f &ray, Intersection &its, uint32_t &idx, bool shadowRay) const {
+//	if (!root) {
+//		return false;
+//	}
+//	bool foundIntersection = false;  // Was an intersection found so far?
+//	if (root->leaf) {
+//		//Test all triangles in the leaf node
+//		for (std::vector<uint32_t>::iterator it = root->triangles->begin(); it != root->triangles->end(); ++it) {
+//			float u, v, t;
+//			if (m_mesh->rayIntersect(*it, ray, u, v, t)) {
+//				/* An intersection was found! Can terminate
+//				immediately if this is a shadow ray query */
+//				if (shadowRay)
+//					return true;
+//				ray.maxt = its.t = t;
+//				its.uv = Point2f(u, v);
+//				its.mesh = m_mesh;
+//				idx = *it;
+//				foundIntersection = true;
+//			}
+//		}
+//	}
+//	else {
+//		for (int i = 0; i < 8; ++i) {
+//			if (root->inte.subbox[i].rayIntersect(ray)) {
+//				foundIntersection = rayIntersectInternal(root->inte.child[i], root->inte.subbox[i], ray, its, idx, shadowRay) || foundIntersection;
+//				if (shadowRay && foundIntersection) {
+//					break;
+//				}
+//			}
+//		}
+//	}
+//	return foundIntersection;
+//}
+
+/* Near to far order traversal version */
+bool Accel::rayIntersectInternal(const Accel::Node* root, const BoundingBox3f& box, Ray3f &ray, Intersection &its, uint32_t &idx, bool shadowRay) const {
+	bool foundIntersection = false;  // Was an intersection found so far?
+	if (root->leaf) {
+		//Test all triangles in the leaf node
+		for (std::vector<uint32_t>::iterator it = root->triangles->begin(); it != root->triangles->end(); ++it) {
+			float u, v, t;
+			if (m_mesh->rayIntersect(*it, ray, u, v, t)) {
+				/* An intersection was found! Can terminate
+				immediately if this is a shadow ray query */
+				if (shadowRay)
+					return true;
+				ray.maxt = its.t = t;
+				its.uv = Point2f(u, v);
+				its.mesh = m_mesh;
+				idx = *it;
+				foundIntersection = true;
+			}
+		}
+	}
+	else {
+		std::vector<std::pair<float, int> > candidate;
+		for (int i = 0; i < 8; ++i) {
+			if (root->inte.child[i]) {
+				float nt, ft;
+				if (root->inte.subbox[i].rayIntersect(ray, nt, ft)) {
+					candidate.push_back(std::make_pair(nt, i));
+					if (candidate.size() > 3) {
+						break;
+					}
+				}
+			}
+		}
+		if (candidate.size() > 0) {
+			std::sort(candidate.begin(), candidate.end());
+			for (int i = 0; i < candidate.size() && !foundIntersection; ++i) {
+				foundIntersection = rayIntersectInternal(root->inte.child[candidate[i].second], root->inte.subbox[candidate[i].second], ray, its, idx, shadowRay);
+			}
+		}
+	}
+	return foundIntersection;
 }
 
 NORI_NAMESPACE_END
