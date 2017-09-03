@@ -17,6 +17,7 @@
 */
 
 #include <nori/accel.h>
+#include <tbb/tbb.h>
 #include <Eigen/Geometry>
 #include <algorithm>
 
@@ -30,11 +31,13 @@ void Accel::addMesh(Mesh *mesh) {
 }
 
 void Accel::build() {
-	std::vector<uint32_t> all;
+	tbb::concurrent_vector<uint32_t> all;
 	for (uint32_t idx = 0; idx < m_mesh->getTriangleCount(); ++idx) {
 		all.push_back(idx);
 	}
-	m_root = buildTree(m_bbox, all, 0);
+	/*BuildTask& root_task = *new(tbb::task::allocate_root()) BuildTask(*this, m_root, m_bbox, all, 0);
+	tbb::task::spawn_root_and_wait(root_task);*/
+	m_root = buildTreeSerial(m_bbox, all, 0);
 }
 
 bool Accel::rayIntersect(const Ray3f &ray_, Intersection &its, bool shadowRay) const {
@@ -102,7 +105,7 @@ bool Accel::rayIntersect(const Ray3f &ray_, Intersection &its, bool shadowRay) c
     return foundIntersection;
 }
 
-Accel::Node* Accel::buildTree(BoundingBox3f& box, std::vector<uint32_t>& triangles, uint32_t depth) {
+Accel::Node* Accel::buildTreeSerial(BoundingBox3f& box, tbb::concurrent_vector<uint32_t>& triangles, uint32_t depth) {
 	Node *node = nullptr;
 	if (triangles.size() > 0) {
 		if (triangles.size() <= LEAF_SIZE || depth > MAX_DEPTH) {
@@ -110,27 +113,66 @@ Accel::Node* Accel::buildTree(BoundingBox3f& box, std::vector<uint32_t>& triangl
 			m_total += triangles.size();
 			node = new Node;
 			node->leaf = true;
-			node->triangles = new std::vector<uint32_t>(std::move(triangles));
+			node->triangles = new tbb::concurrent_vector<uint32_t>(std::move(triangles));
 		}
 		else {
 			m_interior++;
 			node = new Node;
 			node->leaf = false;
-			std::vector<uint32_t> candidates[8];
+			tbb::concurrent_vector<uint32_t> candidates[8];
 			for (int i = 0; i < 8; ++i) {
 				node->inte.subbox[i] = calcBoundingBox(box, i);
-				for (std::vector<uint32_t>::iterator it = triangles.begin(); it != triangles.end(); ++it) {
+				for (tbb::concurrent_vector<uint32_t>::iterator it = triangles.begin(); it != triangles.end(); ++it) {
 					if (node->inte.subbox[i].overlaps(m_mesh->getBoundingBox(*it))) {
 						candidates[i].push_back(*it);
 					}
 				}
 			}
 			for (int i = 0; i < 8; ++i) {
-				node->inte.child[i] = buildTree(node->inte.subbox[i], candidates[i], depth + 1);
+				node->inte.child[i] = buildTreeSerial(node->inte.subbox[i], candidates[i], depth + 1);
 			}
 		}
 	}
 	return node;
+}
+
+Accel::BuildTask::BuildTask(Accel& parent_, Node*& root_, BoundingBox3f& box_, tbb::concurrent_vector<uint32_t>& triangles_, uint32_t depth_)
+	:parent(parent_), root(root_), box(std::move(box_)), triangles(std::move(triangles_)), depth(depth_)
+{}
+
+tbb::task* Accel::BuildTask::execute() {
+	root = nullptr;
+	if (triangles.size() > 0) {
+		if (triangles.size() <= CUTOFF_SIZE || depth > MAX_DEPTH) {
+			root = parent.buildTreeSerial(box, triangles, depth);
+		}
+		else {
+			parent.m_interior++;
+			root = new Node;
+			root->leaf = false;
+			tbb::concurrent_vector<uint32_t> candidates[8];
+			tbb::blocked_range<size_t> range(0, triangles.size(), BLOCK_SIZE);
+			for (int i = 0; i < 8; i++) {
+				root->inte.subbox[i] = calcBoundingBox(box, i);
+			}
+			tbb::parallel_for(range, [this, &candidates](const tbb::blocked_range<size_t>& r) {
+				for (size_t i = r.begin(); i != r.end(); i++) {
+					for (int j = 0; j < 8; j++) {
+						if (this->root->inte.subbox[j].overlaps(this->parent.m_mesh->getBoundingBox(this->triangles[i]))) {
+							candidates[j].push_back(this->triangles[i]);
+						}
+					}
+				}
+			});
+			set_ref_count(9);
+			for (int i = 0; i < 8; i++) {
+				BuildTask& child_task = *new(allocate_child()) BuildTask(parent, root->inte.child[i], root->inte.subbox[i], candidates[i], depth + 1);
+				spawn(child_task);
+			}
+			wait_for_all();
+		}
+	}
+	return nullptr;
 }
 
 BoundingBox3f Accel::calcBoundingBox(const BoundingBox3f& box, int index) {
@@ -156,7 +198,7 @@ BoundingBox3f Accel::calcBoundingBox(const BoundingBox3f& box, int index) {
 //	bool foundIntersection = false;  // Was an intersection found so far?
 //	if (root->leaf) {
 //		//Test all triangles in the leaf node
-//		for (std::vector<uint32_t>::iterator it = root->triangles->begin(); it != root->triangles->end(); ++it) {
+//		for (tbb::concurrent_vector<uint32_t>::iterator it = root->triangles->begin(); it != root->triangles->end(); ++it) {
 //			float u, v, t;
 //			if (m_mesh->rayIntersect(*it, ray, u, v, t)) {
 //				/* An intersection was found! Can terminate
@@ -189,7 +231,7 @@ bool Accel::rayIntersectInternal(const Accel::Node* root, const BoundingBox3f& b
 	bool foundIntersection = false;  // Was an intersection found so far?
 	if (root->leaf) {
 		//Test all triangles in the leaf node
-		for (std::vector<uint32_t>::iterator it = root->triangles->begin(); it != root->triangles->end(); ++it) {
+		for (tbb::concurrent_vector<uint32_t>::iterator it = root->triangles->begin(); it != root->triangles->end(); ++it) {
 			float u, v, t;
 			if (m_mesh->rayIntersect(*it, ray, u, v, t)) {
 				/* An intersection was found! Can terminate
@@ -205,21 +247,22 @@ bool Accel::rayIntersectInternal(const Accel::Node* root, const BoundingBox3f& b
 		}
 	}
 	else {
-		std::vector<std::pair<float, int> > candidate;
+		std::pair<float, int> candidate[4];
+		int cnt = 0;
 		for (int i = 0; i < 8; ++i) {
 			if (root->inte.child[i]) {
 				float nt, ft;
 				if (root->inte.subbox[i].rayIntersect(ray, nt, ft)) {
-					candidate.push_back(std::make_pair(nt, i));
-					if (candidate.size() > 3) {
+					candidate[cnt++] = std::make_pair(nt, i);
+					if (cnt >= 4) {
 						break;
 					}
 				}
 			}
 		}
-		if (candidate.size() > 0) {
-			std::sort(candidate.begin(), candidate.end());
-			for (int i = 0; i < candidate.size() && !foundIntersection; ++i) {
+		if (cnt > 0) {
+			std::sort(candidate, candidate + cnt);
+			for (int i = 0; i < cnt && !foundIntersection; ++i) {
 				foundIntersection = rayIntersectInternal(root->inte.child[candidate[i].second], root->inte.subbox[candidate[i].second], ray, its, idx, shadowRay);
 			}
 		}

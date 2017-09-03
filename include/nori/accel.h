@@ -18,8 +18,9 @@
 
 #pragma once
 
-#include <vector>
 #include <nori/mesh.h>
+#include <tbb/concurrent_vector.h>
+#include <tbb/task.h>
 
 NORI_NAMESPACE_BEGIN
 
@@ -30,32 +31,6 @@ NORI_NAMESPACE_BEGIN
  * through the geometry.
  */
 class Accel {
-private:
-	typedef struct _Node {
-		union {
-			struct {
-				struct _Node* child[8];
-				BoundingBox3f subbox[8];
-			} inte;
-			std::vector<uint32_t>* triangles;
-		};
-		bool leaf;
-
-		_Node() {
-
-		}
-
-		~_Node() {
-			if (leaf) {
-				delete triangles;
-			}
-			else {
-				for (int i = 0; i < 8; ++i) {
-					delete inte.child[i];
-				}
-			}
-		}
-	} Node;
 public:
     /**
      * \brief Register a triangle mesh for inclusion in the acceleration
@@ -99,24 +74,70 @@ public:
 	double averageOnLeaves() const { return 1.0 * m_total / leaves(); }
 
 private:
+	struct _Node;
     Mesh         *m_mesh = nullptr; ///< Mesh (only a single one for now)
     BoundingBox3f m_bbox;           ///< Bounding box of the entire scene
-	Node		 *m_root = nullptr; ///< Root of octree
-	size_t		  m_interior = 0;   ///< Number of interior nodes
-	size_t		  m_leaf = 0;		///< Number of leaf nodes
-	size_t		  m_total = 0;		///< Number of total triangles on leaf nodes
+	_Node		 *m_root = nullptr; ///< Root of octree
+
+	tbb::atomic<size_t>	  m_interior;   ///< Number of interior nodes
+	tbb::atomic<size_t>	  m_leaf;		///< Number of leaf nodes
+	tbb::atomic<size_t>	  m_total;		///< Number of total triangles on leaf nodes
+
 
 	/// Build a node of octree
-	Node* buildTree(BoundingBox3f& box, std::vector<uint32_t>& triangles, uint32_t depth);
+	_Node* buildTree(BoundingBox3f& box, tbb::concurrent_vector<uint32_t>& triangles, uint32_t depth);
+	// Serial version
+	_Node* buildTreeSerial(BoundingBox3f& box, tbb::concurrent_vector<uint32_t>& triangles, uint32_t depth);
 
 	/// Return a 1/8 bounding box by index
 	static BoundingBox3f calcBoundingBox(const BoundingBox3f& box, int index);
 
-	/// Return a 1/8 bounding box by index
-	bool rayIntersectInternal(const Node* root, const BoundingBox3f& box, Ray3f &ray, Intersection &its, uint32_t &idx, bool shadowRay) const;
+	/// RayIntersect variants for internal use
+	bool rayIntersectInternal(const _Node* root, const BoundingBox3f& box, Ray3f &ray, Intersection &its, uint32_t &idx, bool shadowRay) const;
 
 	static const uint32_t MAX_DEPTH = 9;
 	static const size_t LEAF_SIZE = 10;
+	static const size_t CUTOFF_SIZE = 80;
+	static const size_t BLOCK_SIZE = 30;
+
+	typedef struct _Node {
+		union {
+			struct {
+				struct _Node* child[8];
+				BoundingBox3f subbox[8];
+			} inte;
+			tbb::concurrent_vector<uint32_t>* triangles;
+		};
+		bool leaf;
+
+		_Node() {
+
+		}
+
+		~_Node() {
+			if (leaf) {
+				delete triangles;
+			}
+			else {
+				for (int i = 0; i < 8; ++i) {
+					delete inte.child[i];
+				}
+			}
+		}
+	} Node;
+
+	class BuildTask : public tbb::task {
+	public:
+		BuildTask(Accel& parent, Node*& root, BoundingBox3f& box, tbb::concurrent_vector<uint32_t>& triangles, uint32_t depth);
+		tbb::task* execute();
+	private:
+		Accel& parent;
+		Node*& root;
+		BoundingBox3f box;
+		tbb::concurrent_vector<uint32_t> triangles;
+		uint32_t depth;
+	};
+
 };
 
 NORI_NAMESPACE_END
