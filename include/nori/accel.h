@@ -83,10 +83,7 @@ private:
 	tbb::atomic<size_t>	  m_leaf;		///< Number of leaf nodes
 	tbb::atomic<size_t>	  m_total;		///< Number of total triangles on leaf nodes
 
-
-	/// Build a node of octree
-	_Node* buildTree(BoundingBox3f& box, tbb::concurrent_vector<uint32_t>& triangles, uint32_t depth);
-	// Serial version
+	// Build a node of octree serial version
 	_Node* buildTreeSerial(BoundingBox3f& box, tbb::concurrent_vector<uint32_t>& triangles, uint32_t depth);
 
 	/// Return a 1/8 bounding box by index
@@ -125,6 +122,8 @@ private:
 			}
 		}
 	} Node;
+
+	const size_t ttt = sizeof(_Node);
 
 	class BuildTask : public tbb::task {
 	public:
