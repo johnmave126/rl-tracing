@@ -35,9 +35,8 @@ void Accel::build() {
 	for (uint32_t idx = 0; idx < m_mesh->getTriangleCount(); ++idx) {
 		all.push_back(idx);
 	}
-	/*BuildTask& root_task = *new(tbb::task::allocate_root()) BuildTask(*this, m_root, m_bbox, all, 0);
-	tbb::task::spawn_root_and_wait(root_task);*/
-	m_root = buildTreeSerial(m_bbox, all, 0);
+	BuildTask& root_task = *new(tbb::task::allocate_root()) BuildTask(*this, m_root, m_bbox, all, 0);
+	tbb::task::spawn_root_and_wait(root_task);
 }
 
 bool Accel::rayIntersect(const Ray3f &ray_, Intersection &its, bool shadowRay) const {
@@ -48,6 +47,8 @@ bool Accel::rayIntersect(const Ray3f &ray_, Intersection &its, bool shadowRay) c
 
     /* Delegate to octree to find an intersection */
 	foundIntersection = rayIntersectInternal(m_root, m_bbox, ray, its, f, shadowRay);
+	if (shadowRay)
+		return foundIntersection;
 
     if (foundIntersection) {
         /* At this point, we now know that there is an intersection,
