@@ -38,14 +38,7 @@ Scene::~Scene() {
 }
 
 void Scene::activate() {
-	cout << "Building Scene...";
-	cout.flush();
-	Timer timer;
     m_accel->build();
-	cout << "done. (Interior nodes=" << m_accel->interiors()
-		<< ", Leaf nodes=" << m_accel->leaves()
-		<< ", Average on leaf nodes=" << m_accel->averageOnLeaves()
-		<< ", took " << timer.elapsedString() << ")" << endl;
 
     if (!m_integrator)
         throw NoriException("No integrator was specified!");

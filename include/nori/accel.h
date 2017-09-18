@@ -16,127 +16,160 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#pragma once
+#if !defined(__NORI_BVH_H)
+#define __NORI_BVH_H
 
 #include <nori/mesh.h>
-#include <tbb/concurrent_vector.h>
-#include <tbb/task.h>
 
 NORI_NAMESPACE_BEGIN
 
 /**
- * \brief Acceleration data structure for ray intersection queries
+ * \brief Bounding Volume Hierarchy for fast ray intersection queries
  *
- * The current implementation falls back to a brute force loop
- * through the geometry.
+ * This class builds a Bounding Volume Hierarchy (BVH) using a greedy
+ * divide and conquer build strategy, which locally maximizes a criterion
+ * known as the Surface Area Heuristic (SAH) to obtain a tree that is
+ * particularly well-suited for ray intersection queries.
+ *
+ * Construction of a BVH is generally slow; the implementation here runs
+ * in parallel to accelerate this process much as possible. For details
+ * on how this works, refer to the paper
+ *
+ * "Fast and Parallel Construction of SAH-based Bounding Volume Hierarchies"
+ * by Ingo Wald (Proc. IEEE/EG Symposium on Interactive Ray Tracing, 2007)
+ *
+ * \author Wenzel Jakob
  */
 class Accel {
+    friend class BVHBuildTask;
 public:
+    /// Create a new and empty BVH
+    Accel() { m_meshOffset.push_back(0u); }
+
+    /// Release all resources
+    virtual ~Accel() { clear(); };
+
+    /// Release all resources
+    void clear();
+
     /**
-     * \brief Register a triangle mesh for inclusion in the acceleration
-     * data structure
+     * \brief Register a triangle mesh for inclusion in the BVH.
      *
      * This function can only be used before \ref build() is called
      */
     void addMesh(Mesh *mesh);
 
-    /// Build the acceleration data structure
-	void build();
-
-    /// Return an axis-aligned box that bounds the scene
-    const BoundingBox3f &getBoundingBox() const { return m_bbox; }
+    /// Build the BVH
+    void build();
 
     /**
-     * \brief Intersect a ray against all triangles stored in the scene and
-     * return detailed intersection information
+     * \brief Intersect a ray against all triangle meshes registered
+     * with the BVH
      *
-     * \param ray
-     *    A 3-dimensional ray data structure with minimum/maximum extent
-     *    information
+     * Detailed information about the intersection, if any, will be
+     * stored in the provided \ref Intersection data record. 
      *
-     * \param its
-     *    A detailed intersection record, which will be filled by the
-     *    intersection query
+     * The <tt>shadowRay</tt> parameter specifies whether this detailed
+     * information is really needed. When set to \c true, the 
+     * function just checks whether or not there is occlusion, but without
+     * providing any more detail (i.e. \c its will not be filled with
+     * contents). This is usually much faster.
      *
-     * \param shadowRay
-     *    \c true if this is a shadow ray query, i.e. a query that only aims to
-     *    find out whether the ray is blocked or not without returning detailed
-     *    intersection information.
-     *
-     * \return \c true if an intersection was found
+     * \return \c true If an intersection was found
      */
-    bool rayIntersect(const Ray3f &ray, Intersection &its, bool shadowRay) const;
+    bool rayIntersect(const Ray3f &ray, Intersection &its, 
+        bool shadowRay = false) const;
 
-	size_t interiors() const { return m_interior; }
+    /// Return the total number of meshes registered with the BVH
+    uint32_t getMeshCount() const { return (uint32_t) m_meshes.size(); }
 
-	size_t leaves() const { return m_leaf; }
+    /// Return the total number of internally represented triangles 
+    uint32_t getTriangleCount() const { return m_meshOffset.back(); }
 
-	double averageOnLeaves() const { return 1.0 * m_total / leaves(); }
+    /// Return one of the registered meshes
+    Mesh *getMesh(uint32_t idx) { return m_meshes[idx]; }
+    
+    /// Return one of the registered meshes (const version)
+    const Mesh *getMesh(uint32_t idx) const { return m_meshes[idx]; }
 
+    //// Return an axis-aligned bounding box containing the entire tree
+    const BoundingBox3f &getBoundingBox() const {
+        return m_bbox;
+    }
+
+protected:
+    /**
+     * \brief Compute the mesh and triangle indices corresponding to 
+     * a primitive index used by the underlying generic BVH implementation. 
+     */
+    uint32_t findMesh(uint32_t &idx) const {
+        auto it = std::lower_bound(m_meshOffset.begin(), m_meshOffset.end(), idx+1) - 1;
+        idx -= *it;
+        return (uint32_t) (it - m_meshOffset.begin());
+    }
+
+    //// Return an axis-aligned bounding box containing the given triangle
+    BoundingBox3f getBoundingBox(uint32_t index) const {
+        uint32_t meshIdx = findMesh(index);
+        return m_meshes[meshIdx]->getBoundingBox(index);
+    }
+    
+    //// Return the centroid of the given triangle
+    Point3f getCentroid(uint32_t index) const {
+        uint32_t meshIdx = findMesh(index);
+        return m_meshes[meshIdx]->getCentroid(index);
+    }
+
+    /// Compute internal tree statistics
+    std::pair<float, uint32_t> statistics(uint32_t index = 0) const;
+
+    /* BVH node in 32 bytes */
+    struct BVHNode {
+        union {
+            struct {
+                unsigned flag : 1;
+                uint32_t size : 31;
+                uint32_t start;
+            } leaf;
+
+            struct {
+                unsigned flag : 1;
+                uint32_t axis : 31;
+                uint32_t rightChild;
+            } inner;
+
+            uint64_t data;
+        };
+        BoundingBox3f bbox;
+
+        bool isLeaf() const {
+            return leaf.flag == 1;
+        }
+
+        bool isInner() const {
+            return leaf.flag == 0;
+        }
+
+        bool isUnused() const {
+            return data == 0;
+        }
+
+        uint32_t start() const {
+            return leaf.start;
+        }
+
+        uint32_t end() const {
+            return leaf.start + leaf.size;
+        }
+    };
 private:
-	struct _Node;
-    Mesh         *m_mesh = nullptr; ///< Mesh (only a single one for now)
-    BoundingBox3f m_bbox;           ///< Bounding box of the entire scene
-	_Node		 *m_root = nullptr; ///< Root of octree
-
-	tbb::atomic<size_t>	  m_interior;   ///< Number of interior nodes
-	tbb::atomic<size_t>	  m_leaf;		///< Number of leaf nodes
-	tbb::atomic<size_t>	  m_total;		///< Number of total triangles on leaf nodes
-
-	// Build a node of octree serial version
-	_Node* buildTreeSerial(BoundingBox3f& box, tbb::concurrent_vector<uint32_t>& triangles, uint32_t depth);
-
-	/// Return a 1/8 bounding box by index
-	static BoundingBox3f calcBoundingBox(const BoundingBox3f& box, int index);
-
-	/// RayIntersect variants for internal use
-	bool rayIntersectInternal(const _Node* root, const BoundingBox3f& box, Ray3f &ray, Intersection &its, uint32_t &idx, bool shadowRay) const;
-
-	static const uint32_t MAX_DEPTH = 9;
-	static const size_t LEAF_SIZE = 10;
-	static const size_t CUTOFF_SIZE = 80;
-	static const size_t BLOCK_SIZE = 30;
-
-	typedef struct _Node {
-		union {
-			struct {
-				struct _Node* child[8];
-				BoundingBox3f subbox[8];
-			} inte;
-			tbb::concurrent_vector<uint32_t>* triangles;
-		};
-		bool leaf;
-
-		_Node() {
-
-		}
-
-		~_Node() {
-			if (leaf) {
-				delete triangles;
-			}
-			else {
-				for (int i = 0; i < 8; ++i) {
-					delete inte.child[i];
-				}
-			}
-		}
-	} Node;
-
-	const size_t ttt = sizeof(_Node);
-
-	class BuildTask : public tbb::task {
-	public:
-		BuildTask(Accel& parent, Node*& root, BoundingBox3f& box, tbb::concurrent_vector<uint32_t>& triangles, uint32_t depth);
-		tbb::task* execute();
-	private:
-		Accel& parent;
-		Node*& root;
-		BoundingBox3f box;
-		tbb::concurrent_vector<uint32_t> triangles;
-		uint32_t depth;
-	};
-
+    std::vector<Mesh *> m_meshes;       ///< List of meshes registered with the BVH
+    std::vector<uint32_t> m_meshOffset; ///< Index of the first triangle for each shape
+    std::vector<BVHNode> m_nodes;       ///< BVH nodes
+    std::vector<uint32_t> m_indices;    ///< Index references by BVH nodes
+    BoundingBox3f m_bbox;               ///< Bounding box of the entire BVH
 };
 
 NORI_NAMESPACE_END
+
+#endif /* __NORI_BVH_H */
