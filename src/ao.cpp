@@ -7,7 +7,9 @@ NORI_NAMESPACE_BEGIN
 
 class AOIntegrator : public Integrator {
 public:
-	AOIntegrator(const PropertyList &props) {}
+	AOIntegrator(const PropertyList &props) {
+		m_sampleCount = props.getInteger("sampleCount", 32);
+	}
 
 	Color3f Li(const Scene *scene, Sampler *sampler, const Ray3f &ray) const {
 		/* Find the surface that is visible in the requested direction */
@@ -15,17 +17,19 @@ public:
 		if (!scene->rayIntersect(ray, its))
 			return Color3f(0.0f);
 		uint32_t acc = 0;
-		for (uint32_t i = 0; i < sampler->getSampleCount(); ++i) {
+		for (int i = 0; i < m_sampleCount; ++i) {
 			Vector3f w = Warp::squareToCosineHemisphere(sampler->next2D());
 			Vector3f shadow = its.shFrame.toWorld(w);
 			acc += !scene->rayIntersect(Ray3f(its.p, shadow));
 		}
-		return Color3f(1.0f * acc / sampler->getSampleCount());
+		return Color3f(1.0f * acc / m_sampleCount);
 	}
 
 	std::string toString() const {
-		return "AmbientOcclusionIntegrator[]";
+		return tfm::format("AmbientOcclusionIntegrator[sampleCount=%i]", m_sampleCount);
 	}
+private:
+	int m_sampleCount;
 };
 
 NORI_REGISTER_CLASS(AOIntegrator, "ao");
