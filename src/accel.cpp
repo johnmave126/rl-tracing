@@ -191,42 +191,6 @@ BoundingBox3f Accel::calcBoundingBox(const BoundingBox3f& box, int index) {
 	return BoundingBox3f(min, max);
 }
 
-/* Any order traversal version */
-//bool Accel::rayIntersectInternal(const Accel::Node* root, const BoundingBox3f& box, Ray3f &ray, Intersection &its, uint32_t &idx, bool shadowRay) const {
-//	if (!root) {
-//		return false;
-//	}
-//	bool foundIntersection = false;  // Was an intersection found so far?
-//	if (root->leaf) {
-//		//Test all triangles in the leaf node
-//		for (tbb::concurrent_vector<uint32_t>::iterator it = root->triangles->begin(); it != root->triangles->end(); ++it) {
-//			float u, v, t;
-//			if (m_mesh->rayIntersect(*it, ray, u, v, t)) {
-//				/* An intersection was found! Can terminate
-//				immediately if this is a shadow ray query */
-//				if (shadowRay)
-//					return true;
-//				ray.maxt = its.t = t;
-//				its.uv = Point2f(u, v);
-//				its.mesh = m_mesh;
-//				idx = *it;
-//				foundIntersection = true;
-//			}
-//		}
-//	}
-//	else {
-//		for (int i = 0; i < 8; ++i) {
-//			if (root->inte.subbox[i].rayIntersect(ray)) {
-//				foundIntersection = rayIntersectInternal(root->inte.child[i], root->inte.subbox[i], ray, its, idx, shadowRay) || foundIntersection;
-//				if (shadowRay && foundIntersection) {
-//					break;
-//				}
-//			}
-//		}
-//	}
-//	return foundIntersection;
-//}
-
 /* Near to far order traversal version */
 bool Accel::rayIntersectInternal(const Accel::Node* root, const BoundingBox3f& box, Ray3f &ray, Intersection &its, uint32_t &idx, bool shadowRay) const {
 	bool foundIntersection = false;  // Was an intersection found so far?
