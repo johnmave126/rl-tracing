@@ -192,7 +192,7 @@ BoundingBox3f Accel::calcBoundingBox(const BoundingBox3f& box, int index) {
 }
 
 /* Near to far order traversal version */
-bool Accel::rayIntersectInternal(const Accel::Node* root, const BoundingBox3f& box, Ray3f &ray, Intersection &its, uint32_t &idx, bool shadowRay) const {
+bool Accel::rayIntersectInternal(const _Node * root, const BoundingBox3f & box, Ray3f & ray, Intersection & its, uint32_t & idx, bool shadowRay) const {
 	bool foundIntersection = false;  // Was an intersection found so far?
 	if (root->leaf) {
 		//Test all triangles in the leaf node
