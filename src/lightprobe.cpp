@@ -24,13 +24,11 @@ NORI_NAMESPACE_BEGIN
 
 static const int MultiplyDeBruijnBitPosition[64] =
 {
-	0,1,2,4,8,17,34,5,11,23,47,31,63,62,61,59,
-	55,46,29,58,53,43,22,44,24,49,35,7,15,30,60,57,
-	51,38,12,25,50,36,9,18,37,10,21,42,20,41,19,39,
-	14,28,56,48,33,3,6,13,27,54,45,26,52,40,16,32
+	0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20, 15, 25, 17, 4, 8,
+	31, 27, 13, 23, 21, 19, 16, 7, 26, 12, 18, 6, 11, 5, 10, 9
 };
 
-LightProbe::LightProbe(const std::string &filename) {
+LightProbe::LightProbe(const std::string &filename): loaded(true) {
 	Bitmap bitmap(filename);
 	if (bitmap.cols() != bitmap.rows()) {
 		throw NoriException("Width and height of a light probe must match!");
@@ -40,14 +38,17 @@ LightProbe::LightProbe(const std::string &filename) {
 		throw NoriException("Size of a light probe must be power of 2!");
 	}
 	// Find the power of 2 in the size
-	int M = MultiplyDeBruijnBitPosition[((uint64_t)(size * 0x022fdd63cc95386dULL)) >> 58];
+	int M = MultiplyDeBruijnBitPosition[((uint32_t)(size * 0x077CB531U)) >> 27];
 
 	// Convert to luminance and normalize
 	Mipmap original = Mipmap(size, size);
-	float sum = 0;
+	double sum = 0;
 	for (int y = 0; y < size; ++y) {
 		for (int x = 0; x < size; ++x) {
-			float lum = bitmap.coeff(y, x).getLuminance();
+			double lum = bitmap.coeff(y, x).getLuminance();
+			if (lum < 0) {
+				lum = 0;
+			}
 			original.coeffRef(y, x) = lum;
 			sum += lum;
 		}

@@ -53,11 +53,11 @@ using nori::Point2f;
 using nori::Point2i;
 using nori::Point3f;
 using nori::Warp;
-using nori::LightProbe;
 using nori::PropertyList;
 using nori::BSDF;
 using nori::BSDFQueryRecord;
 using nori::Color3f;
+using nori::LightProbe;
 
 class WarpTest : public Screen {
 public:
@@ -75,10 +75,11 @@ public:
         UniformHemisphere,
         CosineHemisphere,
         Beckmann,
-        MicrofacetBRDF
+        MicrofacetBRDF,
+		ImageLightProbe
     };
 
-    WarpTest(): Screen(Vector2i(800, 600), "Assignment 3: Sampling and Warping"), m_bRec(Vector3f()) {
+    WarpTest(): Screen(Vector2i(800, 600), "Assignment 3: Sampling and Warping"), m_bRec(Vector3f()), m_light(LightProbe()) {
         initializeGUI();
         m_drawHistogram = false;
     }
@@ -99,13 +100,14 @@ public:
             case Disk: result << Warp::squareToUniformDisk(sample), 0; break;
             case UniformSphere: result << Warp::squareToUniformSphere(sample); break;
             case UniformHemisphere: result << Warp::squareToUniformHemisphere(sample); break;
-			case CosineHemisphere: result << Warp::squareToLightProbe(sample, LightProbe("2x2Probe.exr")); break;
+            case CosineHemisphere: result << Warp::squareToCosineHemisphere(sample); break;
             case Beckmann: result << Warp::squareToBeckmann(sample, parameterValue); break;
             case MicrofacetBRDF: {
                 BSDFQueryRecord bRec(m_bRec);
                 float value = m_brdf->sample(bRec, sample).getLuminance();
                 return std::make_pair(bRec.wo, value == 0 ? 0.f : m_brdf->eval(bRec)[0]);
              }
+			case ImageLightProbe: result << Warp::squareToLightProbe(sample, m_light), 0; break;
         }
 
         return std::make_pair(result, 1.f);
@@ -167,6 +169,25 @@ public:
                          std::max(std::cos(bsdfAngle), 1e-4f)).normalized();
         }
 
+		if (warpType == ImageLightProbe && !m_light.isLoaded()) {
+			string probe_file = file_dialog({ make_pair("exr", "OpenEXR Format") }, false);
+			try {
+				m_light = LightProbe(probe_file);
+			}
+			catch (const NoriException &e) {
+				m_warpTypeBox->setSelectedIndex(0);
+				refresh();
+				new MessageDialog(this, MessageDialog::Type::Warning, "Error", "An error occurred: " + std::string(e.what()));
+				return;
+			}
+			catch (...) {
+				m_warpTypeBox->setSelectedIndex(0);
+				refresh();
+				new MessageDialog(this, MessageDialog::Type::Warning, "Error", "Cannot Open File: " + probe_file);
+				return;
+			}
+		}
+
         /* Generate the point positions */
         MatrixXf positions, values;
         try {
@@ -186,7 +207,7 @@ public:
         if (!m_brdfValueCheckBox->checked() || warpType != MicrofacetBRDF)
             value_scale = 0.f;
 
-        if (warpType != Square) {
+        if (warpType != Square && warpType != ImageLightProbe) {
             for (int i=0; i<m_pointCount; ++i) {
                 if (values(0, i) == 0.0f) {
                     positions.col(i) = Vector3f::Constant(std::numeric_limits<float>::quiet_NaN());
@@ -228,7 +249,7 @@ public:
                     positions.col(idx++) = value_scale == 0.f ? pt.first : (pt.first * pt.second * value_scale);
                 }
             }
-            if (warpType != Square) {
+            if (warpType != Square && warpType != ImageLightProbe) {
                 for (int i=0; i<m_lineCount; ++i)
                     positions.col(i) = positions.col(i) * 0.5f + Vector3f(0.5f, 0.5f, 0.0f);
             }
@@ -273,6 +294,7 @@ public:
         m_parameterBox->setEnabled(warpType == MicrofacetBRDF);
         m_brdfValueCheckBox->setEnabled(warpType == MicrofacetBRDF);
         m_pointCountSlider->setValue((std::log((float) m_pointCount) / std::log(2.f) - 5) / 15);
+		m_fileButton->setEnabled(warpType == ImageLightProbe);
     }
 
     ~WarpTest() {
@@ -325,7 +347,7 @@ public:
             WarpType warpType = (WarpType) m_warpTypeBox->selectedIndex();
             const int spacer = 20;
             const int histWidth = (width() - 3*spacer) / 2;
-            const int histHeight = (warpType == Square || warpType == Disk || warpType == Tent) ? histWidth : histWidth / 2;
+            const int histHeight = (warpType == Square || warpType == Disk || warpType == Tent || warpType == ImageLightProbe) ? histWidth : histWidth / 2;
             const int verticalOffset = (height() - histHeight) / 2;
 
             drawHistogram(Point2i(spacer, verticalOffset), Vector2i(histWidth, histHeight), m_textures[0]);
@@ -407,7 +429,7 @@ public:
         WarpType warpType = (WarpType) m_warpTypeBox->selectedIndex();
         float parameterValue = mapParameter(warpType, m_parameterSlider->value());
 
-        if (warpType != Square && warpType != Disk && warpType != Tent)
+        if (warpType != Square && warpType != Disk && warpType != Tent && warpType != ImageLightProbe)
             xres *= 2;
 
         int res = yres*xres, sampleCount = 1000 * res;
@@ -426,7 +448,7 @@ public:
             Vector3f sample = points.col(i);
             float x, y;
 
-            if (warpType == Square) {
+            if (warpType == Square || warpType == ImageLightProbe) {
                 x = sample.x();
                 y = sample.y();
             } else if (warpType == Disk || warpType == Tent) {
@@ -446,8 +468,10 @@ public:
 
         auto integrand = [&](double y, double x) -> double {
             if (warpType == Square) {
-                return Warp::squareToUniformSquarePdf(Point2f(x, y));
-            } else if (warpType == Disk) {
+				return Warp::squareToUniformSquarePdf(Point2f(x, y));
+            } else if (warpType == ImageLightProbe) {
+				return Warp::squareToLightProbePdf(Point2f(x, y), m_light);
+			} else if (warpType == Disk) {
                 x = x * 2 - 1; y = y * 2 - 1;
                 return Warp::squareToUniformDiskPdf(Point2f(x, y));
             } else if (warpType == Tent) {
@@ -470,7 +494,7 @@ public:
                 else if (warpType == UniformHemisphere)
                     return Warp::squareToUniformHemispherePdf(v);
                 else if (warpType == CosineHemisphere)
-                    return Warp::squareToLightProbePdf(v, LightProbe("2x2Probe.exr"));
+                    return Warp::squareToCosineHemispherePdf(v);
                 else if (warpType == Beckmann)
                     return Warp::squareToBeckmannPdf(v, parameterValue);
                 else if (warpType == MicrofacetBRDF) {
@@ -485,7 +509,7 @@ public:
         };
 
         double scale = sampleCount;
-        if (warpType == Square)
+        if (warpType == Square || warpType == ImageLightProbe)
             scale *= 1;
         else if (warpType == Disk || warpType == Tent)
             scale *= 4;
@@ -501,8 +525,8 @@ public:
                 double xEnd   = (x+1) / (double) xres;
                 ptr[y * xres + x] = hypothesis::adaptiveSimpson2D(
                     integrand, yStart, xStart, yEnd, xEnd) * scale;
-                if (ptr[y * xres + x] < 0)
-                    throw NoriException("The Pdf() function returned negative values!");
+				if (ptr[y * xres + x] < 0)
+					throw NoriException("The Pdf() function returned negative values!");
             }
         }
 
@@ -567,7 +591,7 @@ public:
 
         new Label(m_window, "Warping method", "sans-bold");
         m_warpTypeBox = new ComboBox(m_window, { "Square", "Tent", "Disk", "Sphere", "Hemisphere (unif.)",
-                "Hemisphere (cos)", "Beckmann distr.", "Microfacet BRDF" });
+                "Hemisphere (cos)", "Beckmann distr.", "Microfacet BRDF", "Light Probe" });
         m_warpTypeBox->setCallback([&](int) { refresh(); });
 
         panel = new Widget(m_window);
@@ -579,6 +603,8 @@ public:
         m_parameterBox->setFixedSize(Vector2i(80, 25));
         m_gridCheckBox = new CheckBox(m_window, "Visualize warped grid");
         m_gridCheckBox->setCallback([&](bool) { refresh(); });
+		m_fileButton = new Button(m_window, "Change Light Probe File");
+		m_fileButton->setCallback([&]() { m_light = LightProbe(); refresh(); });
 
         new Label(m_window, "BSDF parameters", "sans-bold");
 
@@ -771,6 +797,7 @@ private:
     ComboBox *m_pointTypeBox;
     ComboBox *m_warpTypeBox;
     CheckBox *m_gridCheckBox;
+	Button *m_fileButton;
     CheckBox *m_brdfValueCheckBox;
     Arcball m_arcball;
     int m_pointCount, m_lineCount;
@@ -778,6 +805,7 @@ private:
     std::unique_ptr<BSDF> m_brdf;
     BSDFQueryRecord m_bRec;
     std::pair<bool, std::string> m_testResult;
+	LightProbe m_light;
 };
 
 int main(int argc, char **argv) {

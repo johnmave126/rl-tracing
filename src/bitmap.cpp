@@ -26,7 +26,7 @@
 
 NORI_NAMESPACE_BEGIN
 
-Bitmap::Bitmap(const std::string &filename) {
+Bitmap::Bitmap(const std::string & filename) {
     Imf::InputFile file(filename.c_str());
     const Imf::Header &header = file.header();
     const Imf::ChannelList &channels = header.channels();
