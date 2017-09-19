@@ -18,6 +18,7 @@
 
 #include <nori/warp.h>
 #include <nori/bsdf.h>
+#include <nori/lightprobe.h>
 #include <nanogui/screen.h>
 #include <nanogui/glutil.h>
 #include <nanogui/label.h>
@@ -52,6 +53,7 @@ using nori::Point2f;
 using nori::Point2i;
 using nori::Point3f;
 using nori::Warp;
+using nori::LightProbe;
 using nori::PropertyList;
 using nori::BSDF;
 using nori::BSDFQueryRecord;
@@ -97,7 +99,7 @@ public:
             case Disk: result << Warp::squareToUniformDisk(sample), 0; break;
             case UniformSphere: result << Warp::squareToUniformSphere(sample); break;
             case UniformHemisphere: result << Warp::squareToUniformHemisphere(sample); break;
-            case CosineHemisphere: result << Warp::squareToCosineHemisphere(sample); break;
+			case CosineHemisphere: result << Warp::squareToLightProbe(sample, LightProbe("2x2Probe.exr")); break;
             case Beckmann: result << Warp::squareToBeckmann(sample, parameterValue); break;
             case MicrofacetBRDF: {
                 BSDFQueryRecord bRec(m_bRec);
@@ -468,7 +470,7 @@ public:
                 else if (warpType == UniformHemisphere)
                     return Warp::squareToUniformHemispherePdf(v);
                 else if (warpType == CosineHemisphere)
-                    return Warp::squareToCosineHemispherePdf(v);
+                    return Warp::squareToLightProbePdf(v, LightProbe("2x2Probe.exr"));
                 else if (warpType == Beckmann)
                     return Warp::squareToBeckmannPdf(v, parameterValue);
                 else if (warpType == MicrofacetBRDF) {

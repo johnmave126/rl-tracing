@@ -100,4 +100,40 @@ float Warp::squareToBeckmannPdf(const Vector3f &m, float alpha) {
     throw NoriException("Warp::squareToBeckmannPdf() is not yet implemented!");
 }
 
+Point2f Warp::squareToLightProbe(const Point2f &sample, const LightProbe &probe) {
+	Point2f local = Point2f(sample);
+	Point2f probed = Point2f(0.0f);
+	int startCol = 0, startRow = 0;
+	float baseUnit = 0.5f;
+	for (int i = 0; i < probe.getCount(); i++, baseUnit /= 2.0f, startCol <<= 1, startRow <<= 1) {
+		const LightProbe::Mipmap& map = probe.getMap(i);
+		float horRatio = map.coeff(startRow, startCol) + map.coeff(startRow, startCol + 1);
+		if (local.x() < horRatio) {
+			probed.x() += baseUnit;
+			local.x() /= horRatio;
+		}
+		else {
+			local.x() = (local.x() - horRatio) / (1 - horRatio);
+			horRatio = 1 - horRatio;
+			startRow++;
+		}
+		float vertRatio = map.coeff(startRow, startCol) / horRatio;
+		if (local.y() < vertRatio) {
+			local.y() /= vertRatio;
+		}
+		else {
+			probed.y() += baseUnit;
+			local.y() = (local.y() - vertRatio) / (1 - vertRatio);
+			startCol++;
+		}
+	}
+	return probed;
+}
+
+float Warp::squareToLightProbePdf(const Point2f & p, const LightProbe & probe)
+{
+	const LightProbe::Mipmap& topMap = probe.getMap(probe.getCount() - 1);
+	return topMap.coeff(p.x() * topMap.rows(), p.y() * topMap.cols());
+}
+
 NORI_NAMESPACE_END
