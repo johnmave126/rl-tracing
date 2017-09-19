@@ -25,9 +25,29 @@ NORI_NAMESPACE_BEGIN
 /// Mipmaps for a LightProbe image
 class LightProbe {
 public:
-	typedef Eigen::Array<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> Mipmap;
+	typedef Eigen::Array<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> Mipmap;
+	LightProbe() {}
+
 	/// Load an OpenEXR file with the specified filename
 	LightProbe(const std::string &filename);
+
+	LightProbe(const LightProbe &lightprobe)
+		: mipmaps(lightprobe.mipmaps), loaded(loaded) {}
+
+	LightProbe(LightProbe &&lightprobe)
+		: mipmaps(std::move(lightprobe.mipmaps)), loaded(loaded) {}
+
+	LightProbe& operator=(const LightProbe &lightprobe) {
+		mipmaps = lightprobe.mipmaps;
+		loaded = lightprobe.loaded;
+		return *this;
+	}
+
+	LightProbe& operator=(LightProbe &&lightprobe) {
+		mipmaps = std::move(lightprobe.mipmaps);
+		loaded = lightprobe.loaded;
+		return *this;
+	}
 
 	/// Get the i-th mipmap of the probe
 	const Mipmap& getMap(size_t idx) const {
@@ -39,8 +59,13 @@ public:
 		return mipmaps.size();
 	}
 
+	bool isLoaded() const {
+		return loaded;
+	}
+
 private:
 	std::vector<Mipmap> mipmaps;
+	bool loaded = false;
 };
 
 NORI_NAMESPACE_END
