@@ -20,6 +20,7 @@
 
 #include <nori/common.h>
 #include <nori/sampler.h>
+#include <nori/lightprobe.h>
 
 NORI_NAMESPACE_BEGIN
 
@@ -67,6 +68,12 @@ public:
 
     /// Probability density of \ref squareToBeckmann()
     static float squareToBeckmannPdf(const Vector3f &m, float alpha);
+
+	/// Warp a uniformly distributed square sample to a given light probe
+	static Point2f squareToLightProbe(const Point2f &sample, const LightProbe &probe);
+
+	/// Probability density of \ref squareToLightProbe()
+	static float squareToLightProbePdf(const Point2f &p, const LightProbe &probe);
 };
 
 NORI_NAMESPACE_END
