@@ -32,10 +32,10 @@ public:
 	LightProbe(const std::string &filename);
 
 	LightProbe(const LightProbe &lightprobe)
-		: mipmaps(lightprobe.mipmaps), loaded(loaded) {}
+		: mipmaps(lightprobe.mipmaps), loaded(lightprobe.loaded) {}
 
 	LightProbe(LightProbe &&lightprobe)
-		: mipmaps(std::move(lightprobe.mipmaps)), loaded(loaded) {}
+		: mipmaps(std::move(lightprobe.mipmaps)), loaded(lightprobe.loaded) {}
 
 	LightProbe& operator=(const LightProbe &lightprobe) {
 		mipmaps = lightprobe.mipmaps;

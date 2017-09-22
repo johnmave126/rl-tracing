@@ -15,12 +15,11 @@ public:
 		Intersection its;
 		if (!scene->rayIntersect(ray, its))
 			return Color3f(0.0f);
-
 		Vector3f direction = m_position - its.p;
 		/* Check shadow ray*/
 		if (scene->rayIntersect(Ray3f(its.p, direction, 0, 1)))
 			return Color3f(0.0f);
-		return m_energy * (std::max(0.0f, its.shFrame.n.dot(direction) / direction.norm()) / (4 * M_PI * M_PI) / direction.squaredNorm());
+		return m_energy * std::max(0.0f, its.shFrame.n.dot(direction) / direction.norm()) / (4 * M_PI * M_PI) / direction.squaredNorm();
 	}
 
 	std::string toString() const {
