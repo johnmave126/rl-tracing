@@ -46,7 +46,7 @@ bool Accel::rayIntersect(const Ray3f &ray_, Intersection &its, bool shadowRay) c
     Ray3f ray(ray_); /// Make a copy of the ray (we will need to update its '.maxt' value)
 
     /* Delegate to octree to find an intersection */
-	foundIntersection = rayIntersectInternal(m_root, m_bbox, ray, its, f, shadowRay);
+	foundIntersection = rayIntersectInternal(m_root, ray, its, f, shadowRay);
 	if (shadowRay)
 		return foundIntersection;
 
@@ -192,47 +192,55 @@ BoundingBox3f Accel::calcBoundingBox(const BoundingBox3f& box, int index) {
 }
 
 /* Near to far order traversal version */
-bool Accel::rayIntersectInternal(const _Node * root, const BoundingBox3f & box, Ray3f & ray, Intersection & its, uint32_t & idx, bool shadowRay) const {
-	bool foundIntersection = false;  // Was an intersection found so far?
-	if (root->leaf) {
-		//Test all triangles in the leaf node
-		for (tbb::concurrent_vector<uint32_t>::iterator it = root->triangles->begin(); it != root->triangles->end(); ++it) {
-			float u, v, t;
-			if (m_mesh->rayIntersect(*it, ray, u, v, t)) {
-				/* An intersection was found! Can terminate
-				immediately if this is a shadow ray query */
-				if (shadowRay)
-					return true;
-				ray.maxt = its.t = t;
-				its.uv = Point2f(u, v);
-				its.mesh = m_mesh;
-				idx = *it;
-				foundIntersection = true;
+bool Accel::rayIntersectInternal(const _Node * root, Ray3f & ray, Intersection & its, uint32_t & idx, bool shadowRay) const {
+	const _Node * my_stack[4 * (MAX_DEPTH + 1)];
+	bool foundIntersection = false;
+	int top = 0;
+	my_stack[top++] = root;
+	while (top) {
+		const _Node * cur = my_stack[--top];
+		if (cur->leaf) {
+			for (tbb::concurrent_vector<uint32_t>::iterator it = cur->triangles->begin(); it != cur->triangles->end(); ++it) {
+				float u, v, t;
+				if (m_mesh->rayIntersect(*it, ray, u, v, t)) {
+					/* An intersection was found! Can terminate
+					immediately if this is a shadow ray query */
+					if (shadowRay)
+						return true;
+					ray.maxt = its.t = t;
+					its.uv = Point2f(u, v);
+					its.mesh = m_mesh;
+					idx = *it;
+					foundIntersection = true;
+				}
+			}
+			if (foundIntersection) {
+				return true;
 			}
 		}
-	}
-	else {
-		std::pair<float, int> candidate[4];
-		int cnt = 0;
-		for (int i = 0; i < 8; ++i) {
-			if (root->inte.child[i]) {
-				float nt, ft;
-				if (root->inte.subbox[i].rayIntersect(ray, nt, ft)) {
-					candidate[cnt++] = std::make_pair(nt, i);
-					if (cnt >= 4) {
-						break;
+		else {
+			std::pair<float, int> candidate[4];
+			int cnt = 0;
+			for (int i = 0; i < 8; ++i) {
+				if (cur->inte.child[i]) {
+					float nt, ft;
+					if (cur->inte.subbox[i].rayIntersect(ray, nt, ft)) {
+						candidate[cnt++] = std::make_pair(-nt, i);
+						if (cnt >= 4) {
+							break;
+						}
 					}
 				}
 			}
-		}
-		if (cnt > 0) {
-			std::sort(candidate, candidate + cnt);
-			for (int i = 0; i < cnt && !foundIntersection; ++i) {
-				foundIntersection = rayIntersectInternal(root->inte.child[candidate[i].second], root->inte.subbox[candidate[i].second], ray, its, idx, shadowRay);
+			if (cnt > 0) {
+				std::sort(candidate, candidate + cnt);
+				for (int i = 0; i < cnt; ++i) {
+					my_stack[top++] = cur->inte.child[candidate[i].second];
+				}
 			}
 		}
 	}
-	return foundIntersection;
+	return false;
 }
 
 NORI_NAMESPACE_END

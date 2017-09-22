@@ -90,7 +90,7 @@ private:
 	static BoundingBox3f calcBoundingBox(const BoundingBox3f& box, int index);
 
 	/// RayIntersect variants for internal use
-	bool rayIntersectInternal(const _Node* root, const BoundingBox3f& box, Ray3f &ray, Intersection &its, uint32_t &idx, bool shadowRay) const;
+	bool rayIntersectInternal(const _Node* root, Ray3f &ray, Intersection &its, uint32_t &idx, bool shadowRay) const;
 
 	static const uint32_t MAX_DEPTH = 9;
 	static const size_t LEAF_SIZE = 10;
