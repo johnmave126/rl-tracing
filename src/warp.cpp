@@ -42,49 +42,49 @@ float Warp::squareToTentPdf(const Point2f &p) {
 }
 
 Point2f Warp::squareToUniformDisk(const Point2f &sample) {
-	Point2d polar = Point2d(
+	Point2f polar = Point2f(
 		sqrt(sample.y()),
-		2 * M_PI * sample.x()
+		2.0f * M_PI * sample.x()
 	);
 	return Point2f(polar.x() * cos(polar.y()), polar.x() * sin(polar.y()));
 }
 
 float Warp::squareToUniformDiskPdf(const Point2f &p) {
-	return p.squaredNorm() < 1.0f - Epsilon ? 1.0 / M_PI : 0.0f;
+	return p.norm() < 1 ? 1.0f / M_PI : 0.0f;
 }
 
 Vector3f Warp::squareToUniformSphere(const Point2f &sample) {
-	Point2f euler = Point2f(asin(2 * sample.x() - 1), 2 * M_PI * sample.y());
+	Point2f euler = Point2f(2.0f * sqrt(sample.x() * (1-sample.x())), 2.0f * M_PI * sample.y());
 	return Vector3f(
-		cos(euler.x()) * cos(euler.y()),
-		cos(euler.x()) * sin(euler.y()),
-		sin(euler.x())
+		euler.x() * cos(euler.y()),
+		euler.x() * sin(euler.y()),
+		2.0f * sample.x() - 1
 	);
 }
 
 float Warp::squareToUniformSpherePdf(const Vector3f &v) {
-	return abs(v.squaredNorm() - 1.0f) < Epsilon ? 1.0 / (4 * M_PI) : 0.0f;
+	return abs(v.squaredNorm() - 1.0f) < Epsilon ? 1.0f / (4 * M_PI) : 0.0f;
 }
 
 Vector3f Warp::squareToUniformHemisphere(const Point2f &sample) {
-	Point2f euler = Point2f(asin(sample.x()), 2 * M_PI * sample.y());
+	Point2f euler = Point2f(sqrt(1 - sample.x() * sample.x()), 2 * M_PI * sample.y());
 	return Vector3f(
-		cos(euler.x()) * cos(euler.y()),
-		cos(euler.x()) * sin(euler.y()),
-		sin(euler.x())
+		euler.x() * cos(euler.y()),
+		euler.x() * sin(euler.y()),
+		sample.x()
 	);
 }
 
 float Warp::squareToUniformHemispherePdf(const Vector3f &v) {
-	return abs(v.squaredNorm() - 1.0f) < Epsilon && v.z() >= 0 ? 1.0 / (2 * M_PI) : 0.0f;
+	return abs(v.squaredNorm() - 1.0f) < Epsilon && v.z() >= 0 ? 1.0f / (2 * M_PI) : 0.0f;
 }
 
 Vector3f Warp::squareToCosineHemisphere(const Point2f &sample) {
-	Point2f euler = Point2f(acos(1 - 2 * sample.x()) / 2, 2 * M_PI * sample.y());
+	Point2f euler = Point2f(sqrt(sample.x()), 2 * M_PI * sample.y());
 	return Vector3f(
-		sin(euler.x()) * cos(euler.y()),
-		sin(euler.x()) * sin(euler.y()),
-		cos(euler.x())
+		euler.x() * cos(euler.y()),
+		euler.x() * sin(euler.y()),
+		sqrt(1 - sample.x())
 	);
 }
 
