@@ -21,6 +21,7 @@
 #include <nori/object.h>
 #include <nori/frame.h>
 #include <nori/bbox.h>
+#include <nori/dpdf.h>
 
 NORI_NAMESPACE_BEGIN
 
@@ -85,11 +86,14 @@ public:
     /// Return the total number of vertices in this hsape
     uint32_t getVertexCount() const { return (uint32_t) m_V.cols(); }
 
+    /// Return the total surface area of the shape
+    float getSurfaceArea() const { return m_area; }
+
     /**
      * \brief Uniformly sample a position on the mesh with
-     * respect to surface area. Returns both position and normal
+     * respect to surface area. Returns position, normal, and pdf
      */
-    void samplePosition(const Point2f &sample, Point3f &p, Normal3f &n) const;
+    void samplePosition(const Point2f &sample, Point3f &p, Normal3f &n, float &pdf) const;
 
     /// Return the surface area of the given triangle
     float surfaceArea(uint32_t index) const;
@@ -182,6 +186,8 @@ protected:
     BSDF         *m_bsdf = nullptr;      ///< BSDF of the surface
     Emitter    *m_emitter = nullptr;     ///< Associated emitter, if any
     BoundingBox3f m_bbox;                ///< Bounding box of the mesh
+    float         m_area;                ///< Total surface area of the mesh
+    DiscretePDF   m_facepdf;             ///< PDF of choosing a face uniformly
 };
 
 NORI_NAMESPACE_END

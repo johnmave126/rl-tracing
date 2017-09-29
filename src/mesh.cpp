@@ -38,6 +38,32 @@ void Mesh::activate() {
         m_bsdf = static_cast<BSDF *>(
             NoriObjectFactory::createInstance("diffuse", PropertyList()));
     }
+    // Create Discrete PDF for the surface and compute total area
+    m_facepdf.reserve(m_F.cols());
+    m_area = 0.0f;
+    for(size_t i = 0; i < m_F.cols()) {
+        float area = surfaceArea(i);
+        m_area += area;
+        m_facepdf.append(area);
+    }
+    m_facepdf.normalize();
+}
+
+void samplePosition(const Point2f &sample, Point3f &p, Normal3f &n, float &pdf) const {
+    float x = sample.x();
+    size_t index = m_facepdf.sampleReuse(x);
+    uint32_t i0 = m_F(0, index), i1 = m_F(1, index), i2 = m_F(2, index);
+    const Point3f p0 = m_V.col(i0), p1 = m_V.col(i1), p2 = m_V.col(i2);
+    float alpha = 1.0f - sqrt(1.0f - sample.y()), beta = x * (1.0 - alpha);
+    Point3f bary = Point3f(alpha, beta, 1 - alpha, - beta);
+    p = bary.x() * p0 + bary.y() * p1 + bary.z() * p2;
+    if(m_N.cols() > 0) {
+        n = (bary.x() * m_N.col(i0) + bary.y() * m_N.col(i1), + bary.z() * m_N.col(i2)).normalized();
+    }
+    else {
+        n = (p1 - p0).cross(p2 - p0).normalized();
+    }
+    pdf = 1.0f / m_area;
 }
 
 float Mesh::surfaceArea(uint32_t index) const {

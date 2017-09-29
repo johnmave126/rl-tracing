@@ -91,6 +91,7 @@ add_executable(nori
   src/simple.cpp
   src/ao.cpp
   src/lightprobe.cpp
+  src/area.cpp
 )
 
 add_definitions(${NANOGUI_EXTRA_DEFS})
