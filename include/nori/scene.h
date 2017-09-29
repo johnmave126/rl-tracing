@@ -58,6 +58,9 @@ public:
     /// Return a reference to an array containing all meshes
     const std::vector<Mesh *> &getMeshes() const { return m_meshes; }
 
+    /// Return a reference to an array containing all emitting meshes
+    const std::vector<Mesh *> &getEmitters() const { return m_emitters; }
+
     /**
      * \brief Intersect a ray against all triangles stored in the scene
      * and return detailed intersection information
@@ -101,6 +104,9 @@ public:
         return m_accel->getBoundingBox();
     }
 
+    /// Take a [0,1]^2 uniform sample and return a random sample over all emitters
+    const Emitter* sampleEmitter(Point2f& sample, float &pdf) const;
+
     /**
      * \brief Inherited from \ref NoriObject::activate()
      *
@@ -118,10 +124,12 @@ public:
     EClassType getClassType() const { return EScene; }
 private:
     std::vector<Mesh *> m_meshes;
+    std::vector<Mesh *> m_emitters;
     Integrator *m_integrator = nullptr;
     Sampler *m_sampler = nullptr;
     Camera *m_camera = nullptr;
     Accel *m_accel = nullptr;
+    DiscretePDF m_emitterpdf;
 };
 
 NORI_NAMESPACE_END

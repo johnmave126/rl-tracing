@@ -50,10 +50,26 @@ void Scene::activate() {
         m_sampler = static_cast<Sampler*>(
             NoriObjectFactory::createInstance("independent", PropertyList()));
     }
+    for (auto it = m_meshes.begin(); it != m_meshes.end(); ++it) {
+        if ((*it)->isEmitter()) {
+            m_emitters.push_back(*it);
+            m_emitterpdf.append(1.0f);
+        }
+    }
+    m_emitterpdf.normalize();
 
     cout << endl;
     cout << "Configuration: " << toString() << endl;
     cout << endl;
+}
+
+const Emitter* Scene::sampleEmitter(Point2f& sample, float &pdf) const {
+    if (m_emitters.size() == 0) {
+        return nullptr;
+    }
+    size_t idx = m_emitterpdf.sampleReuse(sample.y());
+    pdf = 1.0f / m_emitters.size();
+    return dynamic_cast<const Emitter*>(m_emitters[idx]);
 }
 
 void Scene::addChild(NoriObject *obj) {

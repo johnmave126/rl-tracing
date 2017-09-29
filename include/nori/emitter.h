@@ -33,6 +33,10 @@ public:
      * provided by this instance
      * */
     EClassType getClassType() const { return EEmitter; }
+
+    // Sample a point on a mesh return the radiance, sampled point, normal, and pdf
+    // Input: Original point (in case of a non-uniform emitter), A [0, 1]^2 uniformly sample
+    virtual Color3f sample(const Point3f& origin, const Point2f& sample, Point3f &p, Normal3f &n, float &pdf) const = 0;
 };
 
 NORI_NAMESPACE_END
