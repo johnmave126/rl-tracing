@@ -93,7 +93,7 @@ public:
      * \brief Uniformly sample a position on the mesh with
      * respect to surface area. Returns position, normal, and pdf
      */
-    void samplePosition(const Point2f &sample, Point3f &p, Normal3f &n, float &pdf) const;
+    void samplePosition(const Point2f &sample, Point3f &p, Frame &nFrame, float &pdf) const;
 
     /// Return the surface area of the given triangle
     float surfaceArea(uint32_t index) const;

@@ -49,7 +49,7 @@ void Mesh::activate() {
     m_facepdf.normalize();
 }
 
-void Mesh::samplePosition(const Point2f &sample, Point3f &p, Normal3f &n, float &pdf) const {
+void Mesh::samplePosition(const Point2f &sample, Point3f &p, Frame &nFrame, float &pdf) const {
     float x = sample.x();
     size_t index = m_facepdf.sampleReuse(x);
     uint32_t i0 = m_F(0, index), i1 = m_F(1, index), i2 = m_F(2, index);
@@ -58,10 +58,10 @@ void Mesh::samplePosition(const Point2f &sample, Point3f &p, Normal3f &n, float 
     Point3f bary = Point3f(alpha, beta, 1 - alpha - beta);
     p = bary.x() * p0 + bary.y() * p1 + bary.z() * p2;
     if(m_N.cols() > 0) {
-        n = (bary.x() * m_N.col(i0) + bary.y() * m_N.col(i1), + bary.z() * m_N.col(i2)).normalized();
+		nFrame = Frame((bary.x() * m_N.col(i0) + bary.y() * m_N.col(i1) + bary.z() * m_N.col(i2)).normalized());
     }
     else {
-        n = (p1 - p0).cross(p2 - p0).normalized();
+		nFrame = Frame((p1 - p0).cross(p2 - p0).normalized());
     }
     pdf = 1.0f / m_area;
 }

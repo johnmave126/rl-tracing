@@ -19,6 +19,7 @@
 #pragma once
 
 #include <nori/object.h>
+#include <nori/frame.h>
 
 NORI_NAMESPACE_BEGIN
 
@@ -36,7 +37,13 @@ public:
 
     // Sample a point on a mesh return the radiance, sampled point, normal, and pdf
     // Input: Original point (in case of a non-uniform emitter), A [0, 1]^2 uniformly sample
-    virtual Color3f sample(const Point3f& origin, const Point2f& sample, Point3f &p, Normal3f &n, float &pdf) const = 0;
+    virtual Color3f sample(const Point3f& origin, const Point2f& sample, Point3f &p, Frame &nFrame, float &pdf) const = 0;
+
+	// Get radiance of a direction (local coordinate) at a certain point
+	virtual Color3f getRadiance(const Point3f& p, const Vector3f& d) const = 0;
+
+	// Get pdf of a sampled point
+	virtual float pdf(const Point3f& p) const = 0;
 };
 
 NORI_NAMESPACE_END

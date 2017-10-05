@@ -19,6 +19,11 @@
 #include <nori/bsdf.h>
 #include <nori/frame.h>
 
+inline float power5(float x) {
+	float y = x * x;
+	return y * y * x;
+}
+
 NORI_NAMESPACE_BEGIN
 
 /// Ideal dielectric BSDF
@@ -30,6 +35,7 @@ public:
 
         /* Exterior IOR (default: air) */
         m_extIOR = propList.getFloat("extIOR", 1.000277f);
+
     }
 
     Color3f eval(const BSDFQueryRecord &) const {
@@ -43,7 +49,29 @@ public:
     }
 
     Color3f sample(BSDFQueryRecord &bRec, const Point2f &sample) const {
-        throw NoriException("Unimplemented!");
+		float cosd = Frame::cosTheta(bRec.wi);
+		float eta = cosd <= 0.0f ? m_intIOR / m_extIOR : m_extIOR / m_intIOR;
+		float sint2 = (1 - cosd * cosd) * eta * eta;
+		float cost = cosd <= 0.0f ? sqrt(1.0f - sint2) : -sqrt(1.0f - sint2);
+		float Fr = fresnel(cosd, m_extIOR, m_intIOR);
+		bRec.measure = EDiscrete;
+		if (sample.x() < Fr) {
+			// Reflection in local coordinates
+			bRec.wo = Vector3f(
+				-bRec.wi.x(),
+				-bRec.wi.y(),
+				bRec.wi.z()
+			);
+
+			/* Relative index of refraction: no change */
+			bRec.eta = 1.0f;
+			return Color3f(1.0f);
+		}
+		else {
+			bRec.eta = eta;
+			bRec.wo = (-bRec.wi * bRec.eta + Vector3f(0.0f, 0.0f, cosd * bRec.eta + cost)).normalized();
+			return Color3f(1.0f);
+		}
     }
 
     std::string toString() const {

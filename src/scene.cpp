@@ -52,7 +52,7 @@ void Scene::activate() {
     }
     for (auto it = m_meshes.begin(); it != m_meshes.end(); ++it) {
         if ((*it)->isEmitter()) {
-            m_emitters.push_back(*it);
+            m_emitters.push_back((*it)->getEmitter());
             m_emitterpdf.append(1.0f);
         }
     }
@@ -63,13 +63,18 @@ void Scene::activate() {
     cout << endl;
 }
 
-const Emitter* Scene::sampleEmitter(Point2f& sample, float &pdf) const {
+const Emitter* Scene::sampleEmitter(float &sample, float &pdf) const {
     if (m_emitters.size() == 0) {
         return nullptr;
     }
-    size_t idx = m_emitterpdf.sampleReuse(sample.y());
+    size_t idx = m_emitterpdf.sampleReuse(sample);
     pdf = 1.0f / m_emitters.size();
-    return dynamic_cast<const Emitter*>(m_emitters[idx]);
+    return m_emitters[idx];
+}
+
+const Emitter* Scene::sampleEmitter(const float& sample, float &pdf) const {
+	float s = sample;
+	return sampleEmitter(s, pdf);
 }
 
 void Scene::addChild(NoriObject *obj) {

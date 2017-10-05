@@ -50,7 +50,7 @@ Point2f Warp::squareToUniformDisk(const Point2f &sample) {
 }
 
 float Warp::squareToUniformDiskPdf(const Point2f &p) {
-	return p.norm() < 1 ? 1.0f / M_PI : 0.0f;
+	return p.norm() < 1.0f ? INV_PI : 0.0f;
 }
 
 Vector3f Warp::squareToUniformSphere(const Point2f &sample) {
@@ -63,7 +63,7 @@ Vector3f Warp::squareToUniformSphere(const Point2f &sample) {
 }
 
 float Warp::squareToUniformSpherePdf(const Vector3f &v) {
-	return abs(v.squaredNorm() - 1.0f) < Epsilon ? 1.0f / (4 * M_PI) : 0.0f;
+	return abs(v.squaredNorm() - 1.0f) < FLT_EPSILON ? 1.0f / (4 * M_PI) : 0.0f;
 }
 
 Vector3f Warp::squareToUniformHemisphere(const Point2f &sample) {
@@ -76,7 +76,7 @@ Vector3f Warp::squareToUniformHemisphere(const Point2f &sample) {
 }
 
 float Warp::squareToUniformHemispherePdf(const Vector3f &v) {
-	return abs(v.squaredNorm() - 1.0f) < Epsilon && v.z() >= 0 ? 1.0f / (2 * M_PI) : 0.0f;
+	return abs(v.squaredNorm() - 1.0f) < FLT_EPSILON && v.z() >= 0 ? 1.0f / (2 * M_PI) : 0.0f;
 }
 
 Vector3f Warp::squareToCosineHemisphere(const Point2f &sample) {
@@ -89,57 +89,63 @@ Vector3f Warp::squareToCosineHemisphere(const Point2f &sample) {
 }
 
 float Warp::squareToCosineHemispherePdf(const Vector3f &v) {
-	return abs(v.squaredNorm() - 1.0f) < Epsilon && v.z() >= 0 ? v.dot(Vector3f(0, 0, 1)) / M_PI : 0.0f;
+	return abs(v.squaredNorm() - 1.0f) < FLT_EPSILON && v.z() >= 0 ? v.dot(Vector3f(0, 0, 1)) / M_PI : 0.0f;
 }
 
 Vector3f Warp::squareToBeckmann(const Point2f &sample, float alpha) {
-    throw NoriException("Warp::squareToBeckmann() is not yet implemented!");
+	return sphericalDirection(atan(alpha* sqrt(log(1.0f / (1.0f - sample.y())))), 2.0f * M_PI * sample.x());
+}
+
+inline float squaref(float x) {
+	return x * x;
 }
 
 float Warp::squareToBeckmannPdf(const Vector3f &m, float alpha) {
-    throw NoriException("Warp::squareToBeckmannPdf() is not yet implemented!");
+	float a2 = squaref(alpha);
+	float z2 = squaref(m.z());
+	return m.z() >= FLT_EPSILON && abs(m.squaredNorm() - 1.0f) <= Epsilon ? INV_PI * exp(-(1 - z2) / (z2 * a2)) / (a2 * z2 * m.z()) : 0.0f;
 }
 
 Point2f Warp::squareToLightProbe(const Point2f &sample, const LightProbe &probe) {
 	Point2d local = sample.cast<double>();
-	Point2d probed = Point2d(0.0f);
+	Point2d probed = Point2d(0.0);
 	int startCol = 0, startRow = 0;
-	float baseUnit = 0.5f;
-	for (int i = 0; i < probe.getCount(); i++, baseUnit /= 2.0f, startCol <<= 1, startRow <<= 1) {
+	double baseUnit = 0.5f;
+	for (int i = 0; i < probe.getCount(); i++, baseUnit /= 2.0, startCol <<= 1, startRow <<= 1) {
 		const LightProbe::Mipmap& map = probe.getMap(i);
 		double horRatioUp = map.coeff(startRow, startCol) + map.coeff(startRow, startCol + 1);
 		double horRatioBottom = map.coeff(startRow + 1, startCol) + map.coeff(startRow + 1, startCol + 1);
 		double horRatio = horRatioUp / (horRatioUp + horRatioBottom);
-		if (local.y() < horRatio) {
+		if (local.y() <= horRatio - FLT_EPSILON) {
 			local.y() /= horRatio;
 			horRatio = horRatioUp;
 		}
 		else {
 			probed.y() += baseUnit;
-			local.y() = (local.y() - horRatio) / (1.0f - horRatio);
+			local.y() = (local.y() - horRatio) / (1.0 - horRatio);
 			horRatio = horRatioBottom;
 			startRow++;
 		}
 		double vertRatio = map.coeff(startRow, startCol) / horRatio;
-		if (local.x() < vertRatio) {
+		if (local.x() <= vertRatio - FLT_EPSILON) {
 			local.x() /= vertRatio;
 		}
 		else {
 			probed.x() += baseUnit;
-			local.x() = (local.x() - vertRatio) / (1.0f - vertRatio);
+			local.x() = (local.x() - vertRatio) / (1.0 - vertRatio);
 			startCol++;
 		}
 	}
-	return (probed + local * (2 * baseUnit)).cast<float>();
+	return (probed + local * (2.0 * baseUnit)).cast<float>();
 }
 
 float Warp::squareToLightProbePdf(const Point2f & p, const LightProbe & probe)
 {
-	if (((p.array() < 0).any() || (p.array() >= 1).any())) {
+	if (((p.array() <= -FLT_EPSILON).any() || (p.array() > 1.0f - FLT_EPSILON).any())) {
 		return 0.0f;
 	}
 	const LightProbe::Mipmap& topMap = probe.getMap(probe.getCount() - 1);
-	return topMap.rows() * topMap.cols() * topMap.coeff(p.y() * topMap.rows(), p.x() * topMap.cols());
+	return topMap.rows() * topMap.cols() * topMap.coeff((double)p.y() * topMap.rows(), (double)p.x() * topMap.cols());
 }
 
 NORI_NAMESPACE_END
