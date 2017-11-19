@@ -42,25 +42,86 @@ public:
 
     }
 
-    Color3f eval(const BSDFQueryRecord &) const {
-        /* Discrete BRDFs always evaluate to zero in Nori */
-        return Color3f(0.0f);
+    Color3f eval(const BSDFQueryRecord & bRec) const {
+		if (Frame::cosTheta(bRec.wi) * Frame::cosTheta(bRec.wo) > 0) {
+			//Reflect
+			Vector3f wh = (bRec.wi + bRec.wo).normalized();
+			return Warp::squareToBeckmannPdf(wh, m_alpha) * fresnel(wh.dot(bRec.wi), m_extIOR, m_intIOR)
+				* G1(bRec.wi, wh) * G1(bRec.wo, wh) / abs(4 * Frame::cosTheta(bRec.wi) * Frame::cosTheta(bRec.wo) * Frame::cosTheta(wh));
+		}
+		else {
+			//Transmission
+			Vector3f wh;
+			float ii, io;
+			if (Frame::cosTheta(bRec.wi) > 0) //Ext->Int
+				ii = m_extIOR, io = m_intIOR;
+			else
+				io = m_extIOR, ii = m_intIOR;
+			wh = (-(ii * bRec.wi + io * bRec.wo)).normalized();
+			float iioht = ii * bRec.wi.dot(wh) + io * bRec.wo.dot(wh);
+			return Warp::squareToBeckmannPdf(wh, m_alpha) * (1.0f - fresnel(wh.dot(bRec.wi), m_extIOR, m_intIOR))
+				* G1(bRec.wi, wh) * G1(bRec.wo, wh) * io * io / iioht / iioht * abs(bRec.wi.dot(wh) * bRec.wo.dot(wh) / Frame::cosTheta(bRec.wi) / Frame::cosTheta(bRec.wo));
+		}
     }
 
-    float pdf(const BSDFQueryRecord &) const {
-        /* Discrete BRDFs always evaluate to zero in Nori */
-        return 0.0f;
+    float pdf(const BSDFQueryRecord &bRec) const {
+		if (Frame::cosTheta(bRec.wi) * Frame::cosTheta(bRec.wo) > 0) {
+			//Reflect
+			Vector3f wh = (bRec.wi + bRec.wo).normalized();
+			if (Frame::cosTheta(wh) < 0)
+				wh = -wh;
+			return Warp::squareToBeckmannPdf(wh, m_alpha) * fresnel(wh.dot(bRec.wi), m_extIOR, m_intIOR) / abs(4.0f * wh.dot(bRec.wo));
+		}
+		else {
+			//Transmission
+			Vector3f wh;
+			float ii, io;
+			if (Frame::cosTheta(bRec.wi) > 0) //Ext->Int
+				ii = m_extIOR, io = m_intIOR;
+			else
+				io = m_extIOR, ii = m_intIOR;
+			wh = (-(ii * bRec.wi + io * bRec.wo)).normalized();
+			if (Frame::cosTheta(wh) < 0)
+				wh = -wh;
+			float iioht = ii * bRec.wi.dot(wh) + io * bRec.wo.dot(wh);
+			return Warp::squareToBeckmannPdf(wh, m_alpha) * (1 - fresnel(wh.dot(bRec.wi), m_extIOR, m_intIOR)) / abs(4.0f * wh.dot(bRec.wo));
+		}
     }
 
     Color3f sample(BSDFQueryRecord &bRec, const Point2f &_sample) const {
-		Point2f sample = _sample;
+		// We need to reuse the sample
+		// PCG32 provides 23 random bits for each float, so we have 46 random bits in total
+		// We will provide Beckmann 18+14 random bits and 14 random bits for Fresnel
+		float x = ldexp(_sample.x(), 9), y = ldexp(_sample.y(), 5);
+		float partialx, partialy;
+		Point2f sample = Point2f(modf(x, &partialx), modf(y, &partialy));
+		float sample1d = ldexp(ldexp(partialx, 5) + partialy, -14);
+
 		Vector3f wn = Warp::squareToBeckmann(sample, m_alpha);
-		bRec.wo = (2.0f * wn.dot(bRec.wi) * wn - bRec.wi).normalized();
+		float cosd = wn.dot(bRec.wi);
+		float Fr = fresnel(cosd, m_extIOR, m_intIOR);
+		if (sample1d < Fr) {
+			// Reflect
+			bRec.wo = (2.0f * wn.dot(bRec.wi) * wn - bRec.wi).normalized();
+			bRec.eta = 1.0f;
+			if (Frame::cosTheta(bRec.wo) * Frame::cosTheta(bRec.wi) < 0)
+				return Color3f(0.0f);
+		}
+		else {
+			// Transmission
+			bRec.eta = cosd <= 0.0f ? m_intIOR / m_extIOR : m_extIOR / m_intIOR;
+			float sint2 = (1 - cosd * cosd) * bRec.eta * bRec.eta;
+			float cost = cosd <= 0.0f ? sqrt(1.0f - sint2) : -sqrt(1.0f - sint2);
+			bRec.wo = (-bRec.wi * bRec.eta + (cosd * bRec.eta + cost) * wn).normalized();
+			if (Frame::cosTheta(bRec.wo) * Frame::cosTheta(bRec.wi) > 0)
+				return Color3f(0.0f);
+		}
+		bRec.measure = ESolidAngle;
 		// Note: Once you have implemented the part that computes the scattered
 		// direction, the last part of this function should simply return the
 		// BRDF value divided by the solid angle density and multiplied by the
 		// cosine factor from the reflection equation, i.e.
-		return eval(bRec) * Frame::cosTheta(bRec.wo) / pdf(bRec);
+		return Color3f(1.0f);
     }
 
     std::string toString() const {

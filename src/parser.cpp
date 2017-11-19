@@ -66,6 +66,7 @@ NoriObject *loadFromXML(const std::string &filename) {
         EIntegrator           = NoriObject::EIntegrator,
         ESampler              = NoriObject::ESampler,
         ETest                 = NoriObject::ETest,
+        EGuider               = NoriObject::EGuider,
         EReconstructionFilter = NoriObject::EReconstructionFilter,
 
         /* Properties */
@@ -99,6 +100,7 @@ NoriObject *loadFromXML(const std::string &filename) {
     tags["sampler"]    = ESampler;
     tags["rfilter"]    = EReconstructionFilter;
     tags["test"]       = ETest;
+    tags["guider"]     = EGuider;
     tags["boolean"]    = EBoolean;
     tags["integer"]    = EInteger;
     tags["float"]      = EFloat;

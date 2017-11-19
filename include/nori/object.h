@@ -42,6 +42,7 @@ public:
         ESampler,
         ETest,
         EReconstructionFilter,
+        EGuider,
         EClassTypeCount
     };
 
@@ -98,6 +99,7 @@ public:
             case EIntegrator: return "integrator";
             case ESampler:    return "sampler";
             case ETest:       return "test";
+            case EGuider:     return "guider";
             default:          return "<unknown>";
         }
     }

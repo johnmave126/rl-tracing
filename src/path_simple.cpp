@@ -54,18 +54,12 @@ public:
 						break;
 					inc_ray.normalize();
 					BSDFQueryRecord brec = BSDFQueryRecord(wi, its.shFrame.toLocal(inc_ray), ESolidAngle);
-					bool flag = isnan(result.x()) || isinf(result.x());
 					result += alpha * bsdf->eval(brec) * radiance * (its.shFrame.n.dot(inc_ray) * enFrame.n.dot(-inc_ray) / inc_norm / surface_pdf / emitter_pdf);
-					if (!flag && (isnan(result.x()) || isinf(result.x()))) {
-						cout << tfm::format("%s %s %s\n%s", bsdf->eval(brec).toString(), brec.wi.toString(), brec.wo.toString(), its.mesh->toString()) << endl;
-					}
 				} while (false);
 			}
-			if (k <= 2 || sampler->next1D() < 0.8f) {
+			if (k <= 2 || sampler->next1D() < 0.95f) {
 				BSDFQueryRecord brec = BSDFQueryRecord(wi);
-				alpha *= bsdf->sample(brec, sampler->next2D())  / (k <= 2 ? 1.0f : 0.8f);
-				if ((alpha.array() <= FLT_EPSILON).any())
-					break;
+				alpha *= bsdf->sample(brec, sampler->next2D())  / (k <= 2 ? 1.0f : 0.95f);
 				ray_ = Ray3f(its.p, its.shFrame.toWorld(brec.wo));
 				if (!scene->rayIntersect(ray_, its))
 					break;
