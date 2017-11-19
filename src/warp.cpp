@@ -63,7 +63,7 @@ Vector3f Warp::squareToUniformSphere(const Point2f &sample) {
 }
 
 float Warp::squareToUniformSpherePdf(const Vector3f &v) {
-	return abs(v.squaredNorm() - 1.0f) < FLT_EPSILON ? 1.0f / (4 * M_PI) : 0.0f;
+	return abs(v.squaredNorm() - 1.0f) < 1e-6f ? 1.0f / (4 * M_PI) : 0.0f;
 }
 
 Vector3f Warp::squareToUniformHemisphere(const Point2f &sample) {
@@ -89,7 +89,7 @@ Vector3f Warp::squareToCosineHemisphere(const Point2f &sample) {
 }
 
 float Warp::squareToCosineHemispherePdf(const Vector3f &v) {
-	return abs(v.squaredNorm() - 1.0f) < FLT_EPSILON && v.z() >= 0 ? v.dot(Vector3f(0, 0, 1)) / M_PI : 0.0f;
+	return abs(v.squaredNorm() - 1.0f) < Epsilon && v.z() >= 0 ? v.dot(Vector3f(0, 0, 1)) / M_PI : 0.0f;
 }
 
 Vector3f Warp::squareToBeckmann(const Point2f &sample, float alpha) {
@@ -103,7 +103,7 @@ inline float squaref(float x) {
 float Warp::squareToBeckmannPdf(const Vector3f &m, float alpha) {
 	float a2 = squaref(alpha);
 	float z2 = squaref(m.z());
-	return m.z() >= FLT_EPSILON && abs(m.squaredNorm() - 1.0f) <= Epsilon ? INV_PI * exp(-(1 - z2) / (z2 * a2)) / (a2 * z2 * m.z()) : 0.0f;
+	return m.z() >= Epsilon && abs(m.squaredNorm() - 1.0f) <= Epsilon ? INV_PI * exp(-(1 - z2) / (z2 * a2)) / (a2 * z2 * m.z()) : 0.0f;
 }
 
 Point2f Warp::squareToLightProbe(const Point2f &sample, const LightProbe &probe) {
@@ -116,7 +116,7 @@ Point2f Warp::squareToLightProbe(const Point2f &sample, const LightProbe &probe)
 		double horRatioUp = map.coeff(startRow, startCol) + map.coeff(startRow, startCol + 1);
 		double horRatioBottom = map.coeff(startRow + 1, startCol) + map.coeff(startRow + 1, startCol + 1);
 		double horRatio = horRatioUp / (horRatioUp + horRatioBottom);
-		if (local.y() <= horRatio - FLT_EPSILON) {
+		if (local.y() <= horRatio - Epsilon) {
 			local.y() /= horRatio;
 			horRatio = horRatioUp;
 		}
@@ -127,7 +127,7 @@ Point2f Warp::squareToLightProbe(const Point2f &sample, const LightProbe &probe)
 			startRow++;
 		}
 		double vertRatio = map.coeff(startRow, startCol) / horRatio;
-		if (local.x() <= vertRatio - FLT_EPSILON) {
+		if (local.x() <= vertRatio - Epsilon) {
 			local.x() /= vertRatio;
 		}
 		else {
@@ -141,7 +141,7 @@ Point2f Warp::squareToLightProbe(const Point2f &sample, const LightProbe &probe)
 
 float Warp::squareToLightProbePdf(const Point2f & p, const LightProbe & probe)
 {
-	if (((p.array() <= -FLT_EPSILON).any() || (p.array() > 1.0f - FLT_EPSILON).any())) {
+	if (((p.array() <= -Epsilon).any() || (p.array() > 1.0f - Epsilon).any())) {
 		return 0.0f;
 	}
 	const LightProbe::Mipmap& topMap = probe.getMap(probe.getCount() - 1);

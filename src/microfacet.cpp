@@ -121,7 +121,7 @@ private:
     Color3f m_kd;
 
 	float G1(const Vector3f& wv, const Vector3f& wh) const {
-		if (wv.dot(wh) / wv.z() <= -FLT_EPSILON)
+		if (wv.dot(wh) / wv.z() <= -Epsilon)
 			return 0;
 		float b = wv.z() / m_alpha / sqrt(1.0f - wv.z() * wv.z());
 		if (b < 1.6f) {

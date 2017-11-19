@@ -145,7 +145,7 @@ public:
     inline int locateDirection(const Vector3f& di, int &ix, int& iy) const {
         float x = di.z();
         float y = 0.0f;
-        if (x < 1 - FLT_EPSILON) {
+        if (x < 1 - Epsilon) {
             y = atan(di.y() / di.x());
             if (di.x() < 0) {
                 y += M_PI;
