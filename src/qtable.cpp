@@ -9,8 +9,6 @@
 #include <tbb/concurrent_vector.h>
 #include <tbb/concurrent_hash_map.h>
 
-#define THREASHOLD 5e-2f
-
 NORI_NAMESPACE_BEGIN
 
 class QTableGuider : public Guider {
@@ -93,7 +91,7 @@ public:
                         Point2f sample = sampler->next2D() / m_angleResolution + Point2f(i, j);
                         brec.wo = Warp::squareToUniformHemisphere(sample);
                         Color3f eval = bsdf->eval(brec);
-                        float normal_q = accessor->second.tree->getNormalized(i, j);
+                        float normal_q = accessor->second.tree->get(i, j);
                         float term = (normal_q * Frame::cosTheta(brec.wo) * eval).sum();
                         integral_term += term;
                     }
@@ -105,7 +103,7 @@ public:
                     bsdf->sample(brec, sampler->next2D());
                     int tx, ty;
                     locateDirection(brec.wo, tx, ty);
-                    integral_term += const_access_dest->second.tree->getNormalized(tx, ty);
+                    integral_term += accessor->second.tree->get(tx, ty);
                 }
             }
             accessor.release();
@@ -119,6 +117,7 @@ public:
             }
             integral_job(access_dest);
         }
+        integral_term *= 2.0f * M_PI / m_angleResolution / m_angleResolution;
         if (its.mesh->isEmitter()) {
             integral_term += its.mesh->getEmitter()->getRadiance(its.p, out_ray).sum();
         }
@@ -281,56 +280,42 @@ protected:
         }
 
         void update(int i, int j, Scalar newval) {
+            if(newval < WEIGHT_THREASHOLD)
+                newval = WEIGHT_THREASHOLD;
             Scalar diff = newval - get(i, j);
             int l = 0, r = m_width;
             Node *root = m_xroot;
             m_data[i * m_width + j] = newval;
-            if (root->sum > 10 * m_width * m_height) {
-                //Reweight
-                float weighting = root->sum / m_width / m_height;
-                for (int k = 0; k < m_width * m_height; k++) {
-                    m_data[k] /= weighting;
-                    if (m_data[k] < THREASHOLD)
-                        m_data[k] = THREASHOLD;
+            while (root) {
+                root->sum += diff;
+                int m = (l + r) >> 1;
+                if (i < m) {
+                    root = root->left;
+                    r = m;
                 }
-                rebuildX(root, 0, m_width);
+                else {
+                    root = root->right;
+                    l = m;
+                }
             }
-            else {
-                while (root) {
-                    root->sum += diff;
-                    int m = (l + r) >> 1;
-                    if (i < m) {
-                        root = root->left;
-                        r = m;
-                    }
-                    else {
-                        root = root->right;
-                        l = m;
-                    }
+            root = m_yroots[l];
+            l = 0; r = m_height;
+            while (root) {
+                root->sum += diff;
+                int m = (l + r) >> 1;
+                if (j < m) {
+                    root = root->left;
+                    r = m;
                 }
-                root = m_yroots[l];
-                l = 0; r = m_height;
-                while (root) {
-                    root->sum += diff;
-                    int m = (l + r) >> 1;
-                    if (j < m) {
-                        root = root->left;
-                        r = m;
-                    }
-                    else {
-                        root = root->right;
-                        l = m;
-                    }
+                else {
+                    root = root->right;
+                    l = m;
                 }
             }
         }
 
         inline Scalar get(int i, int j) const {
             return m_data[i * m_width + j];
-        }
-
-        inline Scalar getNormalized(int i, int j) const {
-            return m_data[i * m_width + j] / m_xroot->sum;
         }
 
         void free1D(Node **root) {
@@ -345,7 +330,7 @@ protected:
         Node *m_xroot = nullptr;
         Node **m_yroots = nullptr;
         int m_width, m_height;
-
+        const float WEIGHT_THREASHOLD = 0.1f;
     };
     int m_sceneResolution;
     int m_angleResolution;
