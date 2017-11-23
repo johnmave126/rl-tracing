@@ -90,9 +90,9 @@ public:
                     for (int j = 0; j < m_angleResolution; j++) {
                         Point2f sample = sampler->next2D() / m_angleResolution + Point2f(i, j);
                         brec.wo = Warp::squareToUniformHemisphere(sample);
-                        Color3f eval = bsdf->eval(brec);
+                        float eval = bsdf->eval(brec).maxCoeff();
                         float normal_q = accessor->second.tree->get(i, j);
-                        float term = (normal_q * Frame::cosTheta(brec.wo) * eval).sum();
+                        float term = normal_q * Frame::cosTheta(brec.wo) * eval;
                         integral_term += term;
                     }
                 }
