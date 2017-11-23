@@ -87,6 +87,29 @@ static void render(Scene *scene, const std::string &filename) {
 
         tbb::blocked_range<int> range(0, blockGenerator.getBlockCount());
 
+        auto pre_compute = [&](const tbb::blocked_range<int> &range) {
+            /* Allocate memory for a small image block to be rendered
+            by the current thread */
+            ImageBlock block(Vector2i(NORI_BLOCK_SIZE),
+                camera->getReconstructionFilter());
+
+            /* Create a clone of the sampler for the current thread */
+            PropertyList list;
+            list.setInteger("sampleCount", 8);
+            std::unique_ptr<Sampler> sampler(static_cast<Sampler *>(NoriObjectFactory::createInstance("independent", list)));
+
+            for (int i = range.begin(); i<range.end(); ++i) {
+                /* Request an image block from the block generator */
+                blockGenerator.next(block);
+
+                /* Inform the sampler about the block to be rendered */
+                sampler->prepare(block);
+
+                /* Render all contained pixels */
+                renderBlock(scene, sampler.get(), block);
+            }
+        };
+
         auto map = [&](const tbb::blocked_range<int> &range) {
             /* Allocate memory for a small image block to be rendered
                by the current thread */
@@ -116,6 +139,7 @@ static void render(Scene *scene, const std::string &filename) {
         // map(range);
 
         /// Default: parallel rendering
+        tbb::parallel_for(range, pre_compute);
         tbb::parallel_for(range, map);
 
         cout << "done. (took " << timer.elapsedString() << ")" << endl;

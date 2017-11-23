@@ -88,7 +88,7 @@ public:
                 brec.measure = ESolidAngle;
                 for (int i = 0; i < m_angleResolution; i++) {
                     for (int j = 0; j < m_angleResolution; j++) {
-                        Point2f sample = sampler->next2D() / m_angleResolution + Point2f(i, j);
+                        Point2f sample = (sampler->next2D() + Point2f(i, j)) / m_angleResolution;
                         brec.wo = Warp::squareToUniformHemisphere(sample);
                         float eval = bsdf->eval(brec).maxCoeff();
                         float normal_q = accessor->second.tree->get(i, j);

@@ -61,7 +61,7 @@ public:
                 float pdf = INV_TWOPI;
                 last_ray = /*Warp::squareToUniformHemisphere(sampler->next2D());*/m_guider->sample(sampler->next2D(), its, pdf);
                 BSDFQueryRecord brec = BSDFQueryRecord(wi, last_ray, ESolidAngle);
-				alpha *= bsdf->eval(brec) * Frame::cosTheta(last_ray) / pdf;
+                alpha *= bsdf->eval(brec) * Frame::cosTheta(last_ray) / pdf;
 			}
             else if (!bsdf->isDiffuse()) {
                 BSDFQueryRecord brec = BSDFQueryRecord(wi);
