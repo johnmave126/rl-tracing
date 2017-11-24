@@ -99,6 +99,7 @@ add_executable(nori
   src/roughdielectric.cpp
   src/qtable.cpp
   src/path_guided.cpp
+  src/path_naive.cpp
 )
 
 add_definitions(${NANOGUI_EXTRA_DEFS})
