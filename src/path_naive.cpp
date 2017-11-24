@@ -33,7 +33,7 @@ public:
 			if (bsdf->isDiffuse()) {
                 last_ray = Warp::squareToCosineHemisphere(sampler->next2D());
                 BSDFQueryRecord brec = BSDFQueryRecord(wi, last_ray, ESolidAngle);
-                alpha *= bsdf->eval(brec);
+                alpha *= bsdf->eval(brec) * M_PI;
 			}
             else if (!bsdf->isDiffuse()) {
                 BSDFQueryRecord brec = BSDFQueryRecord(wi);
