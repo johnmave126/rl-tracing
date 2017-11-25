@@ -103,6 +103,7 @@ public:
                     float pdf;
                     brec.wo = m_guider->sample(sampler->next2D(), its, pdf);
                     brec.measure = ESolidAngle;
+                    pdf *= k <= 2 ? 1.0f : 0.95f;
                     alpha *= bsdf->eval(brec) * Frame::cosTheta(brec.wo) / pdf;
                 }
                 last_ray = brec.wo;
