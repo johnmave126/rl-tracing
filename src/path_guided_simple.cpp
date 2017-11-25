@@ -84,12 +84,13 @@ public:
 						break;
                     //Update Guider
                     inc_ray.normalize();
-                    m_guider->update(its.p, inc_ray, emitter_its, sampler);
+                    Vector3f local_inc_ray = its.shFrame.toLocal(inc_ray);
+                    m_guider->update(its.p, local_inc_ray, emitter_its, sampler);
                     //Occluded
                     if ((emitter_its.p - source).norm() > Epsilon)
                         break;
 
-					BSDFQueryRecord brec = BSDFQueryRecord(wi, its.shFrame.toLocal(inc_ray), ESolidAngle);
+					BSDFQueryRecord brec = BSDFQueryRecord(wi, local_inc_ray, ESolidAngle);
 					result += alpha * bsdf->eval(brec) * radiance * (its.shFrame.n.dot(inc_ray) * enFrame.n.dot(-inc_ray) / inc_norm / surface_pdf / emitter_pdf);
 				} while (false);
 			}

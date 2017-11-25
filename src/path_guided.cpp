@@ -62,13 +62,10 @@ public:
                 BSDFQueryRecord brec = BSDFQueryRecord(wi, last_ray, ESolidAngle);
                 alpha *= bsdf->eval(brec) * Frame::cosTheta(last_ray) / pdf;
 			}
-            else if (!bsdf->isDiffuse()) {
+            else {
                 BSDFQueryRecord brec = BSDFQueryRecord(wi);
                 alpha *= bsdf->sample(brec, sampler->next2D());
                 last_ray = brec.wo;
-            }
-            else {
-                break;
             }
             ray_ = Ray3f(its.p, its.shFrame.toWorld(last_ray));
             if (!scene->rayIntersect(ray_, its))
