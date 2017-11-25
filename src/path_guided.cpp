@@ -50,7 +50,6 @@ public:
                 m_guider->update(ray_.o, last_ray, its, sampler);
             }
 			if (its.mesh->isEmitter()) {
-                //cout << tfm::format("%d %s %s\n", k, alpha, its.mesh->toString());
 				return alpha * its.mesh->getEmitter()->getRadiance(its.p, wi);
 			}
 			const BSDF* bsdf = its.mesh->getBSDF();
@@ -58,8 +57,8 @@ public:
 				break;
 			}
 			if (bsdf->isDiffuse()) {
-                float pdf = INV_TWOPI;
-                last_ray = /*Warp::squareToUniformHemisphere(sampler->next2D());*/m_guider->sample(sampler->next2D(), its, pdf);
+                float pdf;
+                last_ray = m_guider->sample(sampler->next2D(), its, pdf);
                 BSDFQueryRecord brec = BSDFQueryRecord(wi, last_ray, ESolidAngle);
                 alpha *= bsdf->eval(brec) * Frame::cosTheta(last_ray) / pdf;
 			}

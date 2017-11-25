@@ -100,6 +100,8 @@ add_executable(nori
   src/qtable.cpp
   src/path_guided.cpp
   src/path_naive.cpp
+  src/path_guided_simple.cpp
+  src/path_guided_mis.cpp
 )
 
 add_definitions(${NANOGUI_EXTRA_DEFS})
