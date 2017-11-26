@@ -59,7 +59,7 @@ public:
                     surface_pdf = its.mesh->getEmitter()->pdf(its.p);
                     float geom = (its.p - ray_.o).squaredNorm() / its.shFrame.n.dot(-ray_.d);
                     float emitter_shading_pdf = emitter_pdf * surface_pdf * geom;
-                    float hemisphere_shading_pdf = m_guider->pdf(-ray_.d.normalized(), ray_.o);
+                    float hemisphere_shading_pdf = m_guider->pdf(last_ray, ray_.o);
                     result += alpha * its.mesh->getEmitter()->getRadiance(its.p, wi) * hemisphere_shading_pdf / (emitter_shading_pdf + hemisphere_shading_pdf);
                 }
 			}
@@ -98,7 +98,7 @@ public:
 
 					BSDFQueryRecord brec = BSDFQueryRecord(wi, local_inc_ray, ESolidAngle);
 					emitter_shading_pdf = surface_pdf * emitter_pdf / enFrame.n.dot(-inc_ray) * inc_norm;
-                    hemisphere_shading_pdf = m_guider->pdf(inc_ray, its.p);
+                    hemisphere_shading_pdf = m_guider->pdf(local_inc_ray, its.p);
 					result += alpha * bsdf->eval(brec) * radiance  / (emitter_shading_pdf + hemisphere_shading_pdf) * its.shFrame.n.dot(inc_ray);
 				} while (false);
 			}
