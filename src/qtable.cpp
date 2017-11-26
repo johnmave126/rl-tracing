@@ -133,6 +133,23 @@ public:
         access_orig->second.visit[angle_orig_idx]++;
     }
 
+    float pdf(const Vector3f& di, const Point3f& origin) {
+        int ox, oy;
+        int block_idx = locateBlock(origin), angle_idx = locateDirection(di, ox, oy);
+        WrapperMap::const_accessor const_access;
+        WrapperMap::accessor access;
+        if (m_storage.find(const_access, block_idx)) {
+            return const_access->second.tree->getPdf(ox, oy);
+        }
+        else {
+            if (m_storage.insert(access, block_idx)) {
+                access->second.init(m_angleResolution, m_angleResolution);
+            }
+            return access->second.tree->getPdf(ox, oy);
+        }
+        return 0.0f;
+    }
+
     int locateBlock(const Point3f& pos) const {
         Vector3f offset = pos - m_sceneBox.min;
         int x = offset.x() / m_sceneBlockSize.x(),
@@ -316,6 +333,10 @@ protected:
 
         inline Scalar get(int i, int j) const {
             return m_data[i * m_width + j];
+        }
+
+        inline Scalar getPdf(int i, int j) const {
+            return m_data[i * m_width + j] / m_xroot->sum * m_width * m_height * INV_TWOPI;
         }
 
         void free1D(Node **root) {

@@ -59,10 +59,10 @@ public:
 					result += alpha * bsdf->eval(brec) * radiance  / (emitter_shading_pdf + hemisphere_shading_pdf) * its.shFrame.n.dot(inc_ray);
 				} while (false);
 			}
-			if (k <= 2 || sampler->next1D() < 0.97f) {
+			if (k <= 2 || sampler->next1D() < 0.95f) {
 				BSDFQueryRecord brec = BSDFQueryRecord(wi);
 				Color3f backup = alpha;
-				alpha *= bsdf->sample(brec, sampler->next2D()) / (k <= 2 ? 1.0f : 0.97f);
+				alpha *= bsdf->sample(brec, sampler->next2D()) / (k <= 2 ? 1.0f : 0.95f);
 				ray_ = Ray3f(its.p, its.shFrame.toWorld(brec.wo));
 				if (!scene->rayIntersect(ray_, its))
 					break;

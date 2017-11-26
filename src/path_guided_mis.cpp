@@ -4,12 +4,35 @@
 #include <nori/emitter.h>
 #include <nori/mesh.h>
 #include <nori/sampler.h>
+#include <nori/guider.h>
 
 NORI_NAMESPACE_BEGIN
 
 class PathGuidedMISIntegrator : public Integrator {
 public:
     PathGuidedMISIntegrator(const PropertyList &props) { }
+
+    void addChild(NoriObject *obj) {
+        switch (obj->getClassType()) {
+        case EGuider:
+            if (m_guider)
+                throw NoriException("There can only be one guider per integrator!");
+            m_guider = static_cast<Guider*>(obj);
+            break;
+        default:
+            throw NoriException("PathGuidedIntegrator::addChild(<%s>) is not supported!",
+                classTypeName(obj->getClassType()));
+        }
+    }
+
+    void activate() {
+        if (!m_guider)
+            throw NoriException("No guider was specified!");
+    }
+
+    void preprocess(const Scene *scene) {
+        m_guider->init(scene);
+    }
 
 	Color3f Li(const Scene *scene, Sampler *sampler, const Ray3f &ray) const {
 		/* Find the surface that is visible in the requested direction */
@@ -21,6 +44,7 @@ public:
 		Color3f alpha = Color3f(1.0f);
 		int k = 0;
 		bool last_specular = false;
+        Vector3f last_ray;
 		while (true) {
 			bool need_shading = true;
 			const Vector3f wi = its.shFrame.toLocal(-ray_.d.normalized());
@@ -28,9 +52,21 @@ public:
 				if (last_specular || k == 0) {
 					//Last hop specular or primary ray
 					result += alpha * its.mesh->getEmitter()->getRadiance(its.p, wi);
-					break;
 				}
+                else {
+                    float emitter_pdf, surface_pdf;
+                    emitter_pdf = 1.0f / scene->getEmitters().size();
+                    surface_pdf = its.mesh->getEmitter()->pdf(its.p);
+                    float geom = (its.p - ray_.o).squaredNorm() / its.shFrame.n.dot(-ray_.d);
+                    float emitter_shading_pdf = emitter_pdf * surface_pdf * geom;
+                    float hemisphere_shading_pdf = m_guider->pdf(-ray_.d.normalized(), ray_.o);
+                    result += alpha * its.mesh->getEmitter()->getRadiance(its.p, wi) * hemisphere_shading_pdf / (emitter_pdf + hemisphere_shading_pdf);
+                }
 			}
+            if (k > 0) {
+                //Update Guider
+                m_guider->update(ray_.o, last_ray, its, sampler);
+            }
 			const BSDF* bsdf = its.mesh->getBSDF();
 			if (!bsdf) {
 				break;
@@ -50,32 +86,39 @@ public:
 					if (its.shFrame.n.dot(inc_ray) <= 0)
 						break;
 					float inc_norm = inc_ray.squaredNorm();
-					if (scene->rayIntersect(Ray3f(its.p, inc_ray, Epsilon, 1.0f - Epsilon)))
-						break;
-					inc_ray.normalize();
-					BSDFQueryRecord brec = BSDFQueryRecord(wi, its.shFrame.toLocal(inc_ray), ESolidAngle);
+                    Intersection emitter_its;
+                    if (!scene->rayIntersect(Ray3f(its.p, inc_ray), emitter_its))
+                        break;
+                    //Update Guider
+                    inc_ray.normalize();
+                    Vector3f local_inc_ray = its.shFrame.toLocal(inc_ray);
+                    //Occluded
+                    if ((emitter_its.p - source).norm() > Epsilon)
+                        break;
+
+					BSDFQueryRecord brec = BSDFQueryRecord(wi, local_inc_ray, ESolidAngle);
 					emitter_shading_pdf = surface_pdf * emitter_pdf / enFrame.n.dot(-inc_ray) * inc_norm;
-					hemisphere_shading_pdf = bsdf->pdf(brec);
+                    hemisphere_shading_pdf = m_guider->pdf(inc_ray, its.p);
 					result += alpha * bsdf->eval(brec) * radiance  / (emitter_shading_pdf + hemisphere_shading_pdf) * its.shFrame.n.dot(inc_ray);
 				} while (false);
 			}
-			if (k <= 2 || sampler->next1D() < 0.97f) {
-				BSDFQueryRecord brec = BSDFQueryRecord(wi);
-				Color3f backup = alpha;
-				alpha *= bsdf->sample(brec, sampler->next2D()) / (k <= 2 ? 1.0f : 0.97f);
-				ray_ = Ray3f(its.p, its.shFrame.toWorld(brec.wo));
-				if (!scene->rayIntersect(ray_, its))
-					break;
-				if (its.mesh->isEmitter() && bsdf->isDiffuse() && need_shading && Frame::cosTheta(wi) > 0) {
-					float emitter_shading_pdf = 0.0f, hemisphere_shading_pdf = bsdf->pdf(brec);
-					float emitter_pdf, surface_pdf;
-					emitter_pdf = 1.0f / scene->getEmitters().size();
-					surface_pdf = its.mesh->getEmitter()->pdf(its.p);
-					emitter_shading_pdf = surface_pdf * emitter_pdf / its.shFrame.n.dot(-ray_.d) * (its.p - ray_.o).squaredNorm();
-					Color3f radiance = its.mesh->getEmitter()->getRadiance(its.p, its.shFrame.toLocal(-ray_.d));
-					if(radiance.maxCoeff() > 0)
-						result += backup * bsdf->eval(brec) * radiance * Frame::cosTheta(brec.wo) / (emitter_shading_pdf + hemisphere_shading_pdf);
-				}
+			if (k <= 2 || sampler->next1D() < 0.95f) {
+                BSDFQueryRecord brec = BSDFQueryRecord(wi);
+                if (last_specular) {
+                    alpha *= bsdf->sample(brec, sampler->next2D()) / (k <= 2 ? 1.0f : 0.95f);
+                }
+                else {
+                    //Use guider to decide next direction
+                    float pdf;
+                    brec.wo = m_guider->sample(sampler->next2D(), its, pdf);
+                    brec.measure = ESolidAngle;
+                    pdf *= k <= 2 ? 1.0f : 0.95f;
+                    alpha *= bsdf->eval(brec) * Frame::cosTheta(brec.wo) / pdf;
+                }
+                last_ray = brec.wo;
+                ray_ = Ray3f(its.p, its.shFrame.toWorld(brec.wo));
+                if (!scene->rayIntersect(ray_, its))
+                    break;
 			}
 			else {
 				break;
@@ -88,6 +131,8 @@ public:
 	std::string toString() const {
 		return "PathGuidedMISIntegrator[]";
 	}
+protected:
+    Guider* m_guider = nullptr;
 };
 
 NORI_REGISTER_CLASS(PathGuidedMISIntegrator, "path_guided_mis");
