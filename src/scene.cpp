@@ -26,8 +26,9 @@
 
 NORI_NAMESPACE_BEGIN
 
-Scene::Scene(const PropertyList &) {
+Scene::Scene(const PropertyList &propList) {
     m_accel = new Accel();
+    m_prerenderSampleCount = propList.getInteger("prerenderSampleCount", 0);
 }
 
 Scene::~Scene() {

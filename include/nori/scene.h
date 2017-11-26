@@ -61,6 +61,9 @@ public:
     /// Return a reference to an array containing all emitting meshes
     const std::vector<Emitter *> &getEmitters() const { return m_emitters; }
 
+    /// Return the sample count for pre-rendering
+    int getPrerenderSampleCount() const { return m_prerenderSampleCount; }
+
     /**
      * \brief Intersect a ray against all triangles stored in the scene
      * and return detailed intersection information
@@ -132,6 +135,7 @@ private:
     Camera *m_camera = nullptr;
     Accel *m_accel = nullptr;
     DiscretePDF m_emitterpdf;
+    int m_prerenderSampleCount = 0;
 };
 
 NORI_NAMESPACE_END

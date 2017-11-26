@@ -60,7 +60,7 @@ public:
                     float geom = (its.p - ray_.o).squaredNorm() / its.shFrame.n.dot(-ray_.d);
                     float emitter_shading_pdf = emitter_pdf * surface_pdf * geom;
                     float hemisphere_shading_pdf = m_guider->pdf(-ray_.d.normalized(), ray_.o);
-                    result += alpha * its.mesh->getEmitter()->getRadiance(its.p, wi) * hemisphere_shading_pdf / (emitter_pdf + hemisphere_shading_pdf);
+                    result += alpha * its.mesh->getEmitter()->getRadiance(its.p, wi) * hemisphere_shading_pdf / (emitter_shading_pdf + hemisphere_shading_pdf);
                 }
 			}
             if (k > 0) {

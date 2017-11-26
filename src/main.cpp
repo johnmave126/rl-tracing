@@ -71,6 +71,9 @@ static void render(Scene *scene, const std::string &filename) {
     /* Create a block generator (i.e. a work scheduler) */
     BlockGenerator blockGenerator(outputSize, NORI_BLOCK_SIZE);
 
+    /* Create a block generator for pre-rendering (i.e. a work scheduler) */
+    BlockGenerator blockGenerator_prerender(outputSize, NORI_BLOCK_SIZE);
+
     /* Allocate memory for the entire output image and clear it */
     ImageBlock result(outputSize, camera->getReconstructionFilter());
     result.clear();
@@ -86,6 +89,34 @@ static void render(Scene *scene, const std::string &filename) {
         Timer timer;
 
         tbb::blocked_range<int> range(0, blockGenerator.getBlockCount());
+
+        auto prerender_map = [&](const tbb::blocked_range<int> &range) {
+            /* Allocate memory for a small image block to be rendered
+            by the current thread */
+            ImageBlock block(Vector2i(NORI_BLOCK_SIZE),
+                camera->getReconstructionFilter());
+
+            /* Create a clone of the sampler for the current thread */
+            PropertyList list;
+            list.setInteger("sampleCount", scene->getPrerenderSampleCount());
+            std::unique_ptr<Sampler> sampler(static_cast<Sampler*>(
+                NoriObjectFactory::createInstance("independent", list)));
+
+            for (int i = range.begin(); i<range.end(); ++i) {
+                /* Request an image block from the block generator */
+                blockGenerator_prerender.next(block);
+
+                /* Inform the sampler about the block to be rendered */
+                sampler->prepare(block);
+
+                /* Render all contained pixels */
+                renderBlock(scene, sampler.get(), block);
+
+                /* The image block has been processed. Now add it to
+                the "big" block that represents the entire image */
+                result.put(block);
+            }
+        };
 
         auto map = [&](const tbb::blocked_range<int> &range) {
             /* Allocate memory for a small image block to be rendered
@@ -114,6 +145,10 @@ static void render(Scene *scene, const std::string &filename) {
 
         /// Uncomment the following line for single threaded rendering
         // map(range);
+        if (scene->getPrerenderSampleCount() > 0) {
+            tbb::parallel_for(range, prerender_map);
+            result.clear();
+        }
 
         /// Default: parallel rendering
         tbb::parallel_for(range, map);
