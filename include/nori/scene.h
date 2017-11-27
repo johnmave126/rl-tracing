@@ -32,7 +32,7 @@ NORI_NAMESPACE_BEGIN
 class Scene : public NoriObject {
 public:
     /// Construct a new scene object
-    Scene(const PropertyList &);
+    Scene(const PropertyList & props);
 
     /// Release all memory
     virtual ~Scene();
@@ -61,8 +61,8 @@ public:
     /// Return a reference to an array containing all emitting meshes
     const std::vector<Emitter *> &getEmitters() const { return m_emitters; }
 
-    /// Return the sample count for pre-rendering
-    int getPrerenderSampleCount() const { return m_prerenderSampleCount; }
+    /// Return whether the rendering should be progressive
+    bool isProgressive() const { return m_isprogressive; }
 
     /**
      * \brief Intersect a ray against all triangles stored in the scene
@@ -135,7 +135,7 @@ private:
     Camera *m_camera = nullptr;
     Accel *m_accel = nullptr;
     DiscretePDF m_emitterpdf;
-    int m_prerenderSampleCount = 0;
+    bool m_isprogressive = false;
 };
 
 NORI_NAMESPACE_END
