@@ -36,7 +36,7 @@ public:
 
 	Color3f Li(const Scene *scene, Sampler *sampler, const Ray3f &ray) const {
 		/* Find the surface that is visible in the requested direction */
-		Intersection its;
+		Intersection its, last_its;
 		Ray3f ray_ = ray;
 		if (!scene->rayIntersect(ray_, its))
 			return Color3f(0.0f);
@@ -44,7 +44,6 @@ public:
 		Color3f alpha = Color3f(1.0f);
 		int k = 0;
 		bool last_specular = false;
-        Vector3f last_ray;
 		while (true) {
 			bool need_shading = true;
             const Vector3f norm_ray = ray_.d.normalized();
@@ -58,7 +57,7 @@ public:
 			}
             if (k > 0) {
                 //Update Guider
-                m_guider->update(ray_.o, last_ray, its, sampler);
+                m_guider->update(last_its, its, sampler);
             }
 			const BSDF* bsdf = its.mesh->getBSDF();
 			if (!bsdf) {
@@ -85,7 +84,7 @@ public:
                     //Update Guider
                     inc_ray.normalize();
                     Vector3f local_inc_ray = its.shFrame.toLocal(inc_ray);
-                    m_guider->update(its.p, local_inc_ray, emitter_its, sampler);
+                    m_guider->update(its, emitter_its, sampler);
                     //Occluded
                     if ((emitter_its.p - source).norm() > Epsilon)
                         break;
@@ -107,7 +106,7 @@ public:
                     pdf *= k <= 2 ? 1.0f : 0.95f;
                     alpha *= bsdf->eval(brec) * Frame::cosTheta(brec.wo) / pdf;
                 }
-                last_ray = brec.wo;
+                last_its = its;
 				ray_ = Ray3f(its.p, its.shFrame.toWorld(brec.wo));
 				if (!scene->rayIntersect(ray_, its))
 					break;

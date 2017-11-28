@@ -71,18 +71,20 @@ public:
         return Warp::squareToUniformHemisphere(result);
     }
 
-    void update(const Point3f& origin, const Vector3f& di, const Intersection& its, Sampler* sampler) {
+    void update(const Intersection& origin, const Intersection& dest, Sampler* sampler) {
+        const Vector3f& ray = (dest.p - origin.p).normalized(),
+                origin_wo = origin.shFrame.toLocal(ray),
+                dest_wi = dest.shFrame.toLocal(ray);
         int ox, oy;
-        int block_orig_idx = locateBlock(origin), angle_orig_idx = locateDirection(di, ox, oy);
-        Vector3f out_ray = its.shFrame.toLocal((origin - its.p).normalized());
-        int block_dest_idx = locateBlock(its.p);
+        int block_orig_idx = locateBlock(origin.p), angle_orig_idx = locateDirection(origin_wo, ox, oy);
+        int block_dest_idx = locateBlock(dest.p);
 
         WrapperMap::const_accessor const_access_dest;
         WrapperMap::accessor access_dest, access_orig;
 
         float integral_term = 0.0f;
-        const BSDF *bsdf = its.mesh->getBSDF();
-        BSDFQueryRecord brec = BSDFQueryRecord(out_ray);
+        const BSDF *bsdf = dest.mesh->getBSDF();
+        BSDFQueryRecord brec = BSDFQueryRecord(dest_wi);
         auto integral_job = [&](auto& accessor) {
             if (bsdf->isDiffuse()) {
                 brec.measure = ESolidAngle;
@@ -118,8 +120,8 @@ public:
             integral_job(access_dest);
         }
         integral_term *= 2.0f * M_PI / m_angleResolution / m_angleResolution;
-        if (its.mesh->isEmitter()) {
-            integral_term += its.mesh->getEmitter()->getRadiance(its.p, out_ray).sum();
+        if (dest.mesh->isEmitter()) {
+            integral_term += dest.mesh->getEmitter()->getRadiance(dest.p, dest_wi).sum();
         }
 
 
@@ -133,9 +135,9 @@ public:
         access_orig->second.visit[angle_orig_idx]++;
     }
 
-    float pdf(const Vector3f& di, const Point3f& origin) {
+    float pdf(const Vector3f& di, const Intersection& origin) {
         int ox, oy;
-        int block_idx = locateBlock(origin), angle_idx = locateDirection(di, ox, oy);
+        int block_idx = locateBlock(origin.p), angle_idx = locateDirection(di, ox, oy);
         WrapperMap::const_accessor const_access;
         WrapperMap::accessor access;
         if (m_storage.find(const_access, block_idx)) {

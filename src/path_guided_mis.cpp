@@ -36,7 +36,7 @@ public:
 
 	Color3f Li(const Scene *scene, Sampler *sampler, const Ray3f &ray) const {
 		/* Find the surface that is visible in the requested direction */
-		Intersection its;
+		Intersection its, last_its;
 		Ray3f ray_ = ray;
 		if (!scene->rayIntersect(ray_, its))
 			return Color3f(0.0f);
@@ -44,7 +44,6 @@ public:
 		Color3f alpha = Color3f(1.0f);
 		int k = 0;
 		bool last_specular = false;
-        Vector3f last_ray;
 		while (true) {
 			bool need_shading = true;
 			const Vector3f wi = its.shFrame.toLocal(-ray_.d.normalized());
@@ -59,13 +58,13 @@ public:
                     surface_pdf = its.mesh->getEmitter()->pdf(its.p);
                     float geom = (its.p - ray_.o).squaredNorm() / its.shFrame.n.dot(-ray_.d);
                     float emitter_shading_pdf = emitter_pdf * surface_pdf * geom;
-                    float hemisphere_shading_pdf = m_guider->pdf(last_ray, ray_.o);
+                    float hemisphere_shading_pdf = m_guider->pdf((its.p - last_its.p).normalized(), last_its);
                     result += alpha * its.mesh->getEmitter()->getRadiance(its.p, wi) * hemisphere_shading_pdf / (emitter_shading_pdf + hemisphere_shading_pdf);
                 }
 			}
             if (k > 0) {
                 //Update Guider
-                m_guider->update(ray_.o, last_ray, its, sampler);
+                m_guider->update(last_its, its, sampler);
             }
 			const BSDF* bsdf = its.mesh->getBSDF();
 			if (!bsdf) {
@@ -98,7 +97,7 @@ public:
 
 					BSDFQueryRecord brec = BSDFQueryRecord(wi, local_inc_ray, ESolidAngle);
 					emitter_shading_pdf = surface_pdf * emitter_pdf / enFrame.n.dot(-inc_ray) * inc_norm;
-                    hemisphere_shading_pdf = m_guider->pdf(local_inc_ray, its.p);
+                    hemisphere_shading_pdf = m_guider->pdf(local_inc_ray, its);
 					result += alpha * bsdf->eval(brec) * radiance  / (emitter_shading_pdf + hemisphere_shading_pdf) * its.shFrame.n.dot(inc_ray);
 				} while (false);
 			}
@@ -115,7 +114,7 @@ public:
                     pdf *= k <= 2 ? 1.0f : 0.95f;
                     alpha *= bsdf->eval(brec) * Frame::cosTheta(brec.wo) / pdf;
                 }
-                last_ray = brec.wo;
+                last_its = its;
                 ray_ = Ray3f(its.p, its.shFrame.toWorld(brec.wo));
                 if (!scene->rayIntersect(ray_, its))
                     break;

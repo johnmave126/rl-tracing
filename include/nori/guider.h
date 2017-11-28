@@ -48,9 +48,6 @@ public:
     * \param origin
     *    The original state point
     *
-    * \param di
-    *    The action taken in local coordinate
-    *
     * \param its
     *    The next intersection
     *
@@ -58,20 +55,20 @@ public:
     *    Provide a random number generator for the method
     *
     */
-    virtual void update(const Point3f& origin, const Vector3f& di, const Intersection& its, Sampler* sampler) = 0;
+    virtual void update(const Intersection& origin, const Intersection& dest, Sampler* sampler) = 0;
 
     /**
     * \brief Return the pdf of a direction
     *
     * \param di
-    *    The original state point
+    *    The action taken in local coordinate
     *
     * \param origin
-    *    The action taken in local coordinate
+    *    The original state point
     *
     * \return the pdf of the direction
     */
-    virtual float pdf(const Vector3f& di, const Point3f& origin) = 0;
+    virtual float pdf(const Vector3f& di, const Intersection& origin) = 0;
 
     EClassType getClassType() const { return EGuider; }
 };

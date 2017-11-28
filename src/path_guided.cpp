@@ -37,17 +37,16 @@ public:
 
 	Color3f Li(const Scene *scene, Sampler *sampler, const Ray3f &ray) const {
 		/* Find the surface that is visible in the requested direction */
-		Intersection its;
+		Intersection its, last_its;
 		Ray3f ray_ = ray;
 		if (!scene->rayIntersect(ray_, its))
 			return Color3f(0.0f);
 		Color3f alpha = Color3f(1.0f);
 		int k = 0;
-        Vector3f last_ray;
 		while (true) {
 			const Vector3f wi = its.shFrame.toLocal(-ray_.d.normalized());
             if (k > 0) {
-                m_guider->update(ray_.o, last_ray, its, sampler);
+                m_guider->update(last_its, its, sampler);
             }
 			if (its.mesh->isEmitter()) {
 				return alpha * its.mesh->getEmitter()->getRadiance(its.p, wi);
@@ -56,18 +55,18 @@ public:
 			if (!bsdf) {
 				break;
 			}
+            BSDFQueryRecord brec = BSDFQueryRecord(wi);
 			if (bsdf->isDiffuse()) {
                 float pdf;
-                last_ray = m_guider->sample(sampler->next2D(), its, pdf);
-                BSDFQueryRecord brec = BSDFQueryRecord(wi, last_ray, ESolidAngle);
-                alpha *= bsdf->eval(brec) * Frame::cosTheta(last_ray) / pdf;
+                brec.wo = m_guider->sample(sampler->next2D(), its, pdf);
+                brec.measure = ESolidAngle;
+                alpha *= bsdf->eval(brec) * Frame::cosTheta(brec.wo) / pdf;
 			}
             else {
-                BSDFQueryRecord brec = BSDFQueryRecord(wi);
                 alpha *= bsdf->sample(brec, sampler->next2D());
-                last_ray = brec.wo;
             }
-            ray_ = Ray3f(its.p, its.shFrame.toWorld(last_ray));
+            ray_ = Ray3f(its.p, its.shFrame.toWorld(brec.wo));
+            last_its = its;
             if (!scene->rayIntersect(ray_, its))
                 break;
 			k++;
