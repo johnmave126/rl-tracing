@@ -27,6 +27,10 @@ protected:
         void init(int width, int height) {
             map = new float[width * height];
             visit = new int[width * height];
+            memset(visit, 0, width * height * sizeof(int));
+            for (int i = 0; i < width * height; i++) {
+                map[i] = 1.0f;
+            }
         }
     };
     typedef tbb::concurrent_hash_map<int, Wrapper> WrapperMap;
@@ -108,14 +112,14 @@ public:
             y = std::upper_bound(weights, weights + m_angleResolution + 1, t) - weights - 1;
             py = y + (t - weights[y]) / (weights[y + 1] - weights[y]);
             pdf = accessor->second.map[this->getHemisphereMap(nx, ny, x, y)] / total_weight * m_angleResolution * m_angleResolution * INV_TWOPI;
-            return Point2f(px, py);
+            return Point2f(px / m_angleResolution, py / m_angleResolution);
         };
         if (m_storage.find(const_access, block_idx)) {
             result = do_sample(const_access);
         }
         else {
             if (m_storage.insert(access, block_idx)) {
-                access->second.init(m_angleResolution, m_angleResolution);
+                access->second.init(2 * m_angleResolution, m_angleResolution);
             }
             result = do_sample(access);
         }
@@ -124,8 +128,7 @@ public:
 
     void update(const Intersection& origin, const Intersection& dest, Sampler* sampler) {
         const Vector3f& ray = (dest.p - origin.p).normalized(),
-                origin_wo = origin.shFrame.toLocal(ray),
-                dest_wi = dest.shFrame.toLocal(ray);
+                dest_wi = dest.shFrame.toLocal(-ray);
         int nx, ny;
         int block_orig_idx = locateBlock(origin.p), angle_orig_idx = locateDirection(ray);
         int block_dest_idx = locateBlock(dest.p);
@@ -166,7 +169,7 @@ public:
         }
         else {
             if (m_storage.insert(access_dest, block_dest_idx)) {
-                access_dest->second.init(m_angleResolution, m_angleResolution);
+                access_dest->second.init(2 * m_angleResolution, m_angleResolution);
             }
             integral_job(access_dest);
         }
@@ -177,7 +180,7 @@ public:
 
 
         if (m_storage.insert(access_orig, block_orig_idx)) {
-            access_orig->second.init(m_angleResolution, m_angleResolution);
+            access_orig->second.init(2 * m_angleResolution, m_angleResolution);
         }
         float alpha = m_useVisit ? 1.0f / (1 + access_orig->second.visit[angle_orig_idx]) : m_alpha;
         float oldval = access_orig->second.map[angle_orig_idx];
@@ -211,7 +214,7 @@ public:
         }
         else {
             if (m_storage.insert(access, block_idx)) {
-                access->second.init(m_angleResolution, m_angleResolution);
+                access->second.init(2 * m_angleResolution, m_angleResolution);
             }
             return calc_pdf(access);
         }
