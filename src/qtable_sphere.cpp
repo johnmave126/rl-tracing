@@ -76,7 +76,8 @@ public:
 
     Vector3f sample(const Point2f& sample, const Intersection& its, float& pdf) {
         int nx, ny;
-        int block_idx = locateBlock(its.p), normal_idx = locateDirection(its.shFrame.n, nx, ny);
+        int block_idx = locateBlock(its.p);
+        locateDirection(its.shFrame.n, nx, ny);
         Point2f result;
         WrapperMap::const_accessor const_access;
         WrapperMap::accessor access;
@@ -90,7 +91,7 @@ public:
             for (int i = 1; i <= m_angleResolution; i++) {
                 weights[i] = weights[i - 1];
                 for (int j = 0; j < m_angleResolution; j++) {
-                    int mapped_idx = getHemisphereMap(nx, ny, i - 1, j);
+                    int mapped_idx = this->getHemisphereMap(nx, ny, i - 1, j);
                     weights[i] += accessor->second.map[mapped_idx];
                 }
             }
@@ -100,13 +101,13 @@ public:
             px = x + (t - weights[x]) / (weights[x + 1] - weights[x]);
             for (int i = 1; i <= m_angleResolution; i++) {
                 weights[i] = weights[i - 1];
-                int mapped_idx = getHemisphereMap(nx, ny, x, i - 1);
+                int mapped_idx = this->getHemisphereMap(nx, ny, x, i - 1);
                 weights[i] += accessor->second.map[mapped_idx];
             }
             t = sample.y() * weights[m_angleResolution];
             y = std::upper_bound(weights, weights + m_angleResolution + 1, t) - weights - 1;
             py = y + (t - weights[y]) / (weights[y + 1] - weights[y]);
-            pdf = accessor->second.map[getHemisphereMap(nx, ny, x, y)] / total_weight * m_angleResolution * m_angleResolution * INV_TWOPI;
+            pdf = accessor->second.map[this->getHemisphereMap(nx, ny, x, y)] / total_weight * m_angleResolution * m_angleResolution * INV_TWOPI;
             return Point2f(px, py);
         };
         if (m_storage.find(const_access, block_idx)) {
@@ -127,7 +128,8 @@ public:
                 dest_wi = dest.shFrame.toLocal(ray);
         int nx, ny;
         int block_orig_idx = locateBlock(origin.p), angle_orig_idx = locateDirection(ray);
-        int block_dest_idx = locateBlock(dest.p), normal_dest_idx = locateDirection(dest.shFrame.n, nx, ny);
+        int block_dest_idx = locateBlock(dest.p);
+        locateDirection(dest.shFrame.n, nx, ny);
 
         WrapperMap::const_accessor const_access_dest;
         WrapperMap::accessor access_dest, access_orig;
@@ -198,7 +200,7 @@ public:
             float total_weight = 0.0f;
             for (int i = 0; i < m_angleResolution; i++) {
                 for (int j = 0; j < m_angleResolution; j++) {
-                    int mapped_idx = getHemisphereMap(nx, ny, i, j);
+                    int mapped_idx = this->getHemisphereMap(nx, ny, i, j);
                     total_weight += accessor->second.map[mapped_idx];
                 }
             }
