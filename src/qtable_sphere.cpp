@@ -112,6 +112,7 @@ public:
             y = std::upper_bound(weights, weights + m_angleResolution + 1, t) - weights - 1;
             py = y + (t - weights[y]) / (weights[y + 1] - weights[y]);
             pdf = accessor->second.map[this->getHemisphereMap(nx, ny, x, y)] / total_weight * m_angleResolution * m_angleResolution * INV_TWOPI;
+            delete[] weights;
             return Point2f(px / m_angleResolution, py / m_angleResolution);
         };
         if (m_storage.find(const_access, block_idx)) {

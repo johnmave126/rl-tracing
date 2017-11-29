@@ -82,7 +82,7 @@ public:
 					Frame enFrame;
 					Color3f radiance = emitter->sample(its.p, sampler->next2D(), source, enFrame, surface_pdf);
 					Vector3f inc_ray = source - its.p;
-					if (its.shFrame.n.dot(inc_ray) <= 0)
+					if (its.shFrame.n.dot(inc_ray) <= 0 || enFrame.n.dot(-inc_ray) <= 0)
 						break;
 					float inc_norm = inc_ray.squaredNorm();
                     Intersection emitter_its;
@@ -91,6 +91,7 @@ public:
                     //Update Guider
                     inc_ray.normalize();
                     Vector3f local_inc_ray = its.shFrame.toLocal(inc_ray);
+                    m_guider->update(its, emitter_its, sampler);
                     //Occluded
                     if ((emitter_its.p - source).norm() > Epsilon)
                         break;
