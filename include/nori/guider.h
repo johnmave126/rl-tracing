@@ -14,6 +14,8 @@ NORI_NAMESPACE_BEGIN
  */
 class Guider : public NoriObject {
 public:
+    virtual ~Guider() { }
+
     /**
      * \brief Initialize the guider using scene information. Pre-train,
 	 * loading, etc. should happen here.

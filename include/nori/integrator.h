@@ -53,6 +53,8 @@ public:
      */
     virtual Color3f Li(const Scene *scene, Sampler *sampler, const Ray3f &ray) const = 0;
 
+    virtual void done() { }
+
     /**
      * \brief Return the type of object (i.e. Mesh/BSDF/etc.) 
      * provided by this instance
