@@ -119,6 +119,10 @@ public:
 		return result;
 	}
 
+    void done() {
+        m_guider->done();
+    }
+
     std::string toString() const {
         return tfm::format(
             "PathGuidedSimpleIntegrator[\n"

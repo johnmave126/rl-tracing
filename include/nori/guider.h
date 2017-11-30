@@ -72,6 +72,8 @@ public:
     */
     virtual float pdf(const Vector3f& di, const Intersection& origin) = 0;
 
+    virtual void  done() { }
+
     EClassType getClassType() const { return EGuider; }
 };
 

@@ -165,7 +165,6 @@ static void render(Scene *scene, const std::string &filename) {
     /* Save using the OpenEXR format */
     bitmap->save(outputName);
 
-
     scene->getIntegrator()->done();
 }
 

@@ -74,6 +74,10 @@ public:
         return Color3f(0.0f);
 	}
 
+    void done() {
+        m_guider->done();
+    }
+
 	std::string toString() const {
         return tfm::format(
             "PathGuidedIntegrator[\n"

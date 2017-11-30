@@ -245,6 +245,27 @@ public:
         return 0.0f;
     }
 
+    void done() {
+        if (m_exportFilename.length() > 0) {
+            std::ofstream file(m_exportFilename);
+            if (!file.is_open()) {
+                throw NoriException("Cannot open file %s to write", m_importFilename.c_str());
+            }
+            // Export to the file
+            std::cout << "Exporting QTableSphere to " << m_exportFilename << " ... ";
+            std::cout.flush();
+            for (WrapperMap::const_iterator it = m_storage.begin(); it != m_storage.end(); ++it) {
+                file << it->first << std::endl;
+                for (int i = 0; i < 2 * m_angleResolution * m_angleResolution; i++) {
+                    file << std::hexfloat << it->second.map[i] << ' ' << it->second.visit[i] << ' ';
+                }
+                file << std::endl;
+            }
+            file.close();
+            std::cout << "done." << std::endl;
+        }
+    }
+
 	std::string toString() const {
         return tfm::format(
             "QTableSphereGuider[\n"
@@ -291,27 +312,6 @@ protected:
 
     inline int& getHemisphereMap(int nx, int ny, int x, int y) {
         return m_hemishpereMap[(((nx * m_angleResolution) + ny) * m_angleResolution + x) + y];
-    }
-
-    void exportFile() {
-        if (m_exportFilename.length() > 0) {
-            std::ofstream file(m_exportFilename);
-            if (!file.is_open()) {
-                throw NoriException("Cannot open file %s to write", m_importFilename.c_str());
-            }
-            // Export to the file
-            std::cout << "Exporting QTableSphere to " << m_exportFilename << " ... ";
-            std::cout.flush();
-            for (WrapperMap::const_iterator it = m_storage.begin(); it != m_storage.end(); ++it) {
-                file << it->first << std::endl;
-                for (int i = 0; i < 2 * m_angleResolution * m_angleResolution; i++) {
-                    file << std::hexfloat << it->second.map[i] << ' ' << it->second.visit[i] << ' ';
-                }
-                file << std::endl;
-            }
-            file.close();
-            std::cout << "done." << std::endl;
-        }
     }
 
     friend class QTableVisualizationIntegrator;
@@ -374,9 +374,6 @@ public:
         return "QTableVisualizationIntegrator[]";
     }
 
-    void done() {
-        m_guider->exportFile();
-    }
 protected:
     QTableSphereGuider* m_guider = nullptr;
 };
