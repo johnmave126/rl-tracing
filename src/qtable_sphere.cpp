@@ -3,11 +3,14 @@
 #include <nori/scene.h>
 #include <nori/sampler.h>
 #include <nori/emitter.h>
+#include <nori/integrator.h>
 #include <nori/bsdf.h>
 #include <nori/warp.h>
 #include <tbb/concurrent_vector.h>
 #include <tbb/concurrent_hash_map.h>
 #include <algorithm>
+#include <fstream>
+#include <iostream>
 
 NORI_NAMESPACE_BEGIN
 
@@ -47,10 +50,30 @@ public:
         }
         //Store m_angleResolution x m_angleResolution array for each element in (2 x m_angleResolution) x m_angleResolution array
         m_hemishpereMap = new int[m_angleResolution * m_angleResolution * m_angleResolution * m_angleResolution * 2];
+        m_importFilename = props.getString("import", "");
+        m_exportFilename = props.getString("export", "");
     }
 
     QTableSphereGuider() {
         delete m_hemishpereMap;
+        if (m_exportFilename.length() > 0) {
+            std::ofstream file(m_exportFilename);
+            if (!file.is_open()) {
+                throw NoriException("Cannot open file %s to write", m_importFilename.c_str());
+            }
+            // Export to the file
+            std::cout << "Exporting QTableSphere to " << m_exportFilename << " ... ";
+            std::cout.flush();
+            for (WrapperMap::const_iterator it = m_storage.begin(); it != m_storage.end(); ++it) {
+                file << it->first << std::endl;
+                for (int i = 0; i < 2 * m_angleResolution * m_angleResolution; i++) {
+                    file << std::hexfloat << it->second.map[i] << ' ' << it->second.visit[i] << ' ';
+                }
+                file << std::endl;
+            }
+            file.close();
+            std::cout << "done." << std::endl;
+        }
     }
 
     /* Integrator need to call this in preprocess() */
@@ -75,6 +98,24 @@ public:
                     }
                 }
             }
+        }
+        if (m_importFilename.length() > 0) {
+            // Import from file
+            std::ifstream file(m_importFilename);
+            if (!file.is_open()) {
+                throw NoriException("Cannot open file %s", m_importFilename.c_str());
+            }
+            while (!file.eof()) {
+                int block_idx;
+                WrapperMap::accessor access;
+                file >> block_idx;
+                m_storage.insert(access, block_idx);
+                for (int i = 0; i < width * height; i++) {
+                    file >> std::hexfloat >> access->second.map[i] >> access->second.visit[i];
+                }
+                access.release();
+            }
+            file.close();
         }
     }
 
@@ -270,6 +311,8 @@ protected:
         return m_hemishpereMap[(((nx * m_angleResolution) + ny) * m_angleResolution + x) + y];
     }
 
+    friend class QTableVisualizationIntegrator;
+
     int m_sceneResolution;
     int m_angleResolution;
     float m_alpha;
@@ -279,7 +322,58 @@ protected:
     WrapperMap m_storage;
     int* m_hemishpereMap;
     const float UPDATE_THREASHOLD = 0.1f;
+    std::string m_importFilename;
+    std::string m_exportFilename;
+};
+
+
+class QTableVisualizationIntegrator : public Integrator {
+public:
+    QTableVisualizationIntegrator(const PropertyList &props) {
+        /* No parameters this time */
+    }
+
+    void addChild(NoriObject *obj) {
+        switch (obj->getClassType()) {
+        case EGuider:
+            if (m_guider)
+                throw NoriException("There can only be one guider per integrator!");
+            m_guider = dynamic_cast<QTableSphereGuider*>(obj);
+            break;
+        default:
+            throw NoriException("PathGuidedIntegrator::addChild(<%s>) is not supported!",
+                classTypeName(obj->getClassType()));
+        }
+    }
+
+    void activate() {
+        if (!m_guider)
+            throw NoriException("No guider was specified!");
+    }
+
+    void preprocess(const Scene *scene) {
+        m_guider->init(scene);
+    }
+
+    Color3f Li(const Scene *scene, Sampler *sampler, const Ray3f &ray) const {
+        /* Find the surface that is visible in the requested direction */
+        Intersection its;
+        if (!scene->rayIntersect(ray, its))
+            return Color3f(0.0f);
+
+        /* Return the component-wise absolute
+        value of the shading normal as a color */
+        Normal3f n = its.shFrame.n.cwiseAbs();
+        return Color3f(n.x(), n.y(), n.z());
+    }
+
+    std::string toString() const {
+        return "QTableVisualizationIntegrator[]";
+    }
+protected:
+    QTableSphereGuider* m_guider = nullptr;
 };
 
 NORI_REGISTER_CLASS(QTableSphereGuider, "qtable_sphere");
+NORI_REGISTER_CLASS(QTableVisualizationIntegrator, "qtable_visualization");
 NORI_NAMESPACE_END

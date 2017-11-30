@@ -117,14 +117,20 @@ static void render(Scene *scene, const std::string &filename) {
 
         /// Default: parallel rendering
         if (scene->isProgressive()) {
+            cout << "Progressive Mode ... " << endl;
+            cout.flush();
             int maxSampleCount = scene->getSampler()->getSampleCount(),
                 lastSampleCount = maxSampleCount >> 1;
             for (int curSampleCount = 1; curSampleCount <= lastSampleCount; curSampleCount <<= 1) {
+                cout << "Rendering " << curSampleCount << "spp ...";
+                cout.flush();
                 scene->getSampler()->setSampleCount(curSampleCount);
                 tbb::parallel_for(range, map);
                 blockGenerator.reset();
+                cout << "done." << endl;
                 result.clear();
             }
+            cout << "Rendering " << maxSampleCount << "spp ...";
             scene->getSampler()->setSampleCount(maxSampleCount);
             tbb::parallel_for(range, map);
         }
