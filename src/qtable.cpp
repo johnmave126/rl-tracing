@@ -74,7 +74,7 @@ public:
     void update(const Intersection& origin, const Intersection& dest, Sampler* sampler) {
         const Vector3f& ray = (dest.p - origin.p).normalized(),
                 origin_wo = origin.shFrame.toLocal(ray),
-                dest_wi = dest.shFrame.toLocal(ray);
+                dest_wi = dest.shFrame.toLocal(-ray);
         int ox, oy;
         int block_orig_idx = locateBlock(origin.p), angle_orig_idx = locateDirection(origin_wo, ox, oy);
         int block_dest_idx = locateBlock(dest.p);
