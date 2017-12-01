@@ -89,25 +89,19 @@ public:
 					Frame enFrame;
 					Color3f radiance = emitter->sample(its.p, sampler->next2D(), source, enFrame, surface_pdf);
 					Vector3f inc_ray = source - its.p;
-					if (its.shFrame.n.dot(inc_ray) <= 0 || enFrame.n.dot(-inc_ray) <= 0)
+					if (its.shFrame.n.dot(inc_ray) <= 0 || enFrame.n.dot(-inc_ray) <= 0 || radiance.sum() < Epsilon)
 						break;
 					float inc_norm = inc_ray.squaredNorm();
-                    Intersection emitter_its;
-                    if (!scene->rayIntersect(Ray3f(its.p, inc_ray), emitter_its))
+                    if (scene->rayIntersect(Ray3f(its.p, inc_ray, Epsilon, 1.0f - Epsilon)))
                         break;
-                    //Update Guider
                     inc_ray.normalize();
                     Vector3f local_inc_ray = its.shFrame.toLocal(inc_ray);
-                    m_guider->update(its, emitter_its, sampler);
-                    //Occluded
-                    if ((emitter_its.p - source).norm() > Epsilon)
-                        break;
 
 					BSDFQueryRecord brec = BSDFQueryRecord(wi, local_inc_ray, ESolidAngle);
 					emitter_shading_pdf = surface_pdf * emitter_pdf / enFrame.n.dot(-inc_ray) * inc_norm;
                     hemisphere_shading_pdf = m_guider->pdf(local_inc_ray, its);
                     bool isresult_nan = CHECK_VALID(result.r());
-					result += alpha * bsdf->eval(brec) * radiance  / (emitter_shading_pdf + hemisphere_shading_pdf) * its.shFrame.n.dot(inc_ray);
+					result += alpha * bsdf->eval(brec) * radiance  / (emitter_shading_pdf + hemisphere_shading_pdf) * Frame::cosTheta(local_inc_ray);
                     if (!isresult_nan && CHECK_VALID(result.r())) {
                         cout << tfm::format("112: alpha: %s\nh_pdf: %f, e_pdf: %f, radiance: %s\nits.p: %s, source: %s, its.n: %s, enFrame.n: %s\n",
                             alpha.toString(), hemisphere_shading_pdf, emitter_shading_pdf, radiance.toString(), its.p.toString(), source.toString(), its.shFrame.n.toString(), enFrame.n.toString());
