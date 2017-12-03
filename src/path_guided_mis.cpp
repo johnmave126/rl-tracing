@@ -58,7 +58,7 @@ public:
                     float emitter_pdf, surface_pdf;
                     emitter_pdf = 1.0f / scene->getEmitters().size();
                     surface_pdf = its.mesh->getEmitter()->pdf(its.p);
-                    float geom = (its.p - ray_.o).squaredNorm() / its.shFrame.n.dot(-ray_.d);
+                    float geom = (its.p - ray_.o).squaredNorm() / abs(its.shFrame.n.dot(ray_.d));
                     float emitter_shading_pdf = emitter_pdf * surface_pdf * geom;
                     float hemisphere_shading_pdf = m_guider->pdf(last_its.shFrame.toLocal((its.p - last_its.p).normalized()), last_its);
                     bool isresult_nan = CHECK_VALID(result.r());
@@ -98,7 +98,7 @@ public:
                     Vector3f local_inc_ray = its.shFrame.toLocal(inc_ray);
 
 					BSDFQueryRecord brec = BSDFQueryRecord(wi, local_inc_ray, ESolidAngle);
-					emitter_shading_pdf = surface_pdf * emitter_pdf / enFrame.n.dot(-inc_ray) * inc_norm;
+					emitter_shading_pdf = surface_pdf * emitter_pdf / abs(enFrame.n.dot(inc_ray)) * inc_norm;
                     hemisphere_shading_pdf = m_guider->pdf(local_inc_ray, its);
                     bool isresult_nan = CHECK_VALID(result.r());
 					result += alpha * bsdf->eval(brec) * radiance  / (emitter_shading_pdf + hemisphere_shading_pdf) * Frame::cosTheta(local_inc_ray);
