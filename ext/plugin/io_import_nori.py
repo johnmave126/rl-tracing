@@ -97,7 +97,8 @@ class NoriReader:
                     (0, 0, 0, 1)
                 ])
                 euler = lookat_transform.to_euler()
-                camera_obj.location = -vorigin
+                euler.z = euler.z
+                camera_obj.location = vorigin
                 camera_obj.rotation_euler = euler
 
         camera_obj.data.clip_end = farClip
@@ -121,6 +122,7 @@ class NoriReader:
 
             bm = bmesh.new()
             bm.from_mesh(me)
+            bmesh.ops.scale(bm, vec=(1, -1, -1))
 
             transforms = mesh.find("./transform")
             for transform in transforms:
@@ -155,7 +157,7 @@ class NoriReader:
                 radiance = emitter.find("./color[@name='radiance']")
                 color = max(float(x) for x in re.split(
                     '[,\s]+', radiance.get('value')))
-                mat.emit = color
+                mat.emit = color / 1000
 
             bpy.context.selected_objects[0].select = False
 

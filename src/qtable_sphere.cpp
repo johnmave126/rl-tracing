@@ -364,10 +364,15 @@ public:
         if (!scene->rayIntersect(ray, its))
             return Color3f(0.0f);
 
-        /* Return the component-wise absolute
-        value of the shading normal as a color */
-        Normal3f n = its.shFrame.n.cwiseAbs();
-        return Color3f(n.x(), n.y(), n.z());
+        Point3f center = its.p - 5.0f * its.shFrame.n;
+        QTableSphereGuider::WrapperMap::const_accessor const_access;
+        int block_idx = m_guider->locateBlock(center),
+            angle_idx = m_guider->locateDirection(its.shFrame.n);
+
+        if (m_guider->m_storage.find(const_access, block_idx)) {
+            return Color3f(1.0f, const_access->second.map[angle_idx], 0.0f);
+        }
+        return Color3f(0.0f);
     }
 
     std::string toString() const {
