@@ -70,7 +70,7 @@ public:
         //Pre-compute hemisphere map
         for (int i = 0; i < width; i++) {
             for (int j = 0; j < height; j++) {
-                Vector3f center_di = Warp::squareToUniformSphere(Point2f((i + 0.5f) / width, 1.0f * (i + 0.5f) / height));
+                Vector3f center_di = Warp::squareToUniformSphere(Point2f((i + 0.5f) / width, (j + 0.5f) / height));
                 Frame center_frame = Frame(center_di);
                 for (int k = 0; k < m_angleResolution; k++) {
                     for (int l = 0; l < m_angleResolution; l++) {
@@ -92,6 +92,7 @@ public:
                 WrapperMap::accessor access;
                 file >> block_idx;
                 m_storage.insert(access, block_idx);
+                access->second.init(width, height);
                 for (int i = 0; i < width * height; i++) {
                     file >> std::hexfloat >> access->second.map[i] >> access->second.visit[i];
                 }
@@ -99,8 +100,19 @@ public:
             }
             file.close();
         }
-    }
 
+        //cout << "Testing locateDirection" << endl;
+        //for (int i = 0; i < width; i++) {
+        //    for (int j = 0; j < height; j++) {
+        //        int x, y;
+        //        Point2f s = Point2f((i + 0.5f) / width, (j + 0.5f) / height);
+        //        locateDirection(Warp::squareToUniformSphere(s), x, y);
+        //        if (i != x || j != y) {
+        //            cout << "Oops..." << i << ' ' << x << ' ' << j << ' ' << y << endl;
+        //        }
+        //    }
+        //}
+    }
     Vector3f sample(const Point2f& sample, const Intersection& its, float& pdf) {
         int nx, ny;
         int block_idx = locateBlock(its.p);
@@ -360,17 +372,30 @@ public:
 
     Color3f Li(const Scene *scene, Sampler *sampler, const Ray3f &ray) const {
         /* Find the surface that is visible in the requested direction */
-        Intersection its;
+        Intersection its, its_;
         if (!scene->rayIntersect(ray, its))
             return Color3f(0.0f);
 
-        Point3f center = its.p - 5.0f * its.shFrame.n;
+        if (!its.mesh->getBSDF()->isProbe())
+            return Color3f(0.0f);
+
+        if (!scene->rayIntersect(Ray3f(its.p, -its.shFrame.n), its_))
+            return Color3f(0.0f);
         QTableSphereGuider::WrapperMap::const_accessor const_access;
-        int block_idx = m_guider->locateBlock(center),
+        int block_idx = m_guider->locateBlock(its_.p),
             angle_idx = m_guider->locateDirection(its.shFrame.n);
+        int nx, ny;
+        m_guider->locateDirection(its_.shFrame.n, nx, ny);
 
         if (m_guider->m_storage.find(const_access, block_idx)) {
-            return Color3f(1.0f, const_access->second.map[angle_idx], 0.0f);
+            float maxq = 0.0f;
+
+            for (int i = 0; i < m_guider->m_angleResolution; i++) {
+                for (int j = 0; j < m_guider->m_angleResolution; j++) {
+                    maxq = std::max(maxq, const_access->second.map[m_guider->getHemisphereMap(nx, ny, i, j)]);
+                }
+            }
+            return Color3f(const_access->second.map[angle_idx] / maxq, 1.0f , 0.0f);
         }
         return Color3f(0.0f);
     }
