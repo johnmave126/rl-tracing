@@ -29,6 +29,7 @@ protected:
         void init(int width, int height) {
             tree = new RangeTree<float>(width, height);
             visit = new int[width * height];
+            memset(visit, 0, width * height * sizeof(int));
         }
     };
     typedef tbb::concurrent_hash_map<int, Wrapper> WrapperMap;
@@ -161,16 +162,14 @@ public:
     }
 
     inline int locateDirection(const Vector3f& di, int &ix, int& iy) const {
-        float x = di.z();
+        float x = std::min(1 - Epsilon, di.z());
         float y = 0.0f;
-        if (x < 1 - Epsilon) {
-            y = atan(di.y() / di.x());
-            if (di.x() < 0) {
-                y += M_PI;
-            }
-            else if (di.y() < 0) {
-                y += 2 * M_PI;
-            }
+        y = atan(di.y() / di.x());
+        if (di.x() < 0) {
+            y += M_PI;
+        }
+        else if (di.y() < 0) {
+            y += 2 * M_PI;
         }
         y /= 2 * M_PI;
         ix = x * m_angleResolution;

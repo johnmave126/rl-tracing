@@ -92,8 +92,11 @@ public:
 					if (its.shFrame.n.dot(inc_ray) <= 0 || enFrame.n.dot(-inc_ray) <= 0 || radiance.sum() < Epsilon)
 						break;
 					float inc_norm = inc_ray.squaredNorm();
-                    if (scene->rayIntersect(Ray3f(its.p, inc_ray, Epsilon, 1.0f - Epsilon)))
+                    if (scene->rayIntersect(Ray3f(its.p, inc_ray, Epsilon, 1 - Epsilon)))
                         break;
+                    //Intersection e_its;
+                    //if (!scene->rayIntersect(Ray3f(its.p, inc_ray), e_its) || (source - e_its.p).norm() > Epsilon)
+                    //    break;
                     inc_ray.normalize();
                     Vector3f local_inc_ray = its.shFrame.toLocal(inc_ray);
 
@@ -106,6 +109,7 @@ public:
                         cout << tfm::format("112: alpha: %s\nh_pdf: %f, e_pdf: %f, radiance: %s\nits.p: %s, source: %s, its.n: %s, enFrame.n: %s\n",
                             alpha.toString(), hemisphere_shading_pdf, emitter_shading_pdf, radiance.toString(), its.p.toString(), source.toString(), its.shFrame.n.toString(), enFrame.n.toString());
                     }
+                    //m_guider->update(its, e_its, sampler);
 				} while (false);
 			}
 			if (k <= 2 || sampler->next1D() < 0.95f) {

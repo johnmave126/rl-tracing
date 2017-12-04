@@ -55,7 +55,7 @@ public:
     }
 
     ~QTableSphereGuider() {
-        delete m_hemishpereMap;
+        delete[] m_hemishpereMap;
     }
 
     /* Integrator need to call this in preprocess() */
@@ -309,16 +309,14 @@ protected:
     }
 
     inline int locateDirection(const Vector3f& di, int &ix, int& iy) const {
-        float x = di.z();
+        float x = std::max(-1 + Epsilon, std::min(1 - Epsilon, di.z()));
         float y = 0.0f;
-        if (x < 1 - Epsilon && x > -1 + Epsilon) {
-            y = atan(di.y() / di.x());
-            if (di.x() < 0) {
-                y += M_PI;
-            }
-            else if (di.y() < 0) {
-                y += 2 * M_PI;
-            }
+        y = atan(di.y() / di.x());
+        if (di.x() < 0) {
+            y += M_PI;
+        }
+        else if (di.y() < 0) {
+            y += 2 * M_PI;
         }
         x = (x + 1.0f) / 2.0f;
         y /= 2.0f * M_PI;
@@ -333,16 +331,14 @@ protected:
     }
 
     inline int locateDirectionHemisphere(const Vector3f& di, int &ix, int& iy) const {
-        float x = di.z();
+        float x = std::min(1 - Epsilon, di.z());
         float y = 0.0f;
-        if (x < 1 - Epsilon) {
-            y = atan(di.y() / di.x());
-            if (di.x() < 0) {
-                y += M_PI;
-            }
-            else if (di.y() < 0) {
-                y += 2 * M_PI;
-            }
+        y = atan(di.y() / di.x());
+        if (di.x() < 0) {
+            y += M_PI;
+        }
+        else if (di.y() < 0) {
+            y += 2 * M_PI;
         }
         y /= 2 * M_PI;
         ix = x * m_angleResolution;
@@ -356,7 +352,7 @@ protected:
     }
 
     inline int& getHemisphereMap(int nx, int ny, int x, int y) {
-        return m_hemishpereMap[(((nx * m_angleResolution) + ny) * m_angleResolution + x) + y];
+        return m_hemishpereMap[(((nx * m_angleResolution) + ny) * m_angleResolution + x) * m_angleResolution + y];
     }
 
     friend class QTableVisualizationIntegrator;
