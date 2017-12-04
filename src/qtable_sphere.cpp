@@ -183,17 +183,13 @@ public:
         const Vector3f& ray = (dest.p - origin.p).normalized(),
             dest_wi = dest.shFrame.toLocal(-ray),
             orig_wi = origin.shFrame.toLocal(ray);
-        int nx, ny, ox, oy;
+        int nx, ny;
         locateDirection(dest.shFrame.n, nx, ny);
         assert(nx < 2 * m_angleResolution);
         assert(ny < m_angleResolution);
-        int block_orig_idx = locateBlock(origin.p);
-        locateDirectionHemisphere(orig_wi, ox, oy);
-        assert(ox < m_angleResolution);
-        assert(oy < m_angleResolution);
-        int block_dest_idx = locateBlock(dest.p),
-            angle_orig_idx = getHemisphereMap(nx, ny, ox, oy);
-
+        int block_orig_idx = locateBlock(origin.p),
+            angle_orig_idx = locateDirection(ray);
+        int block_dest_idx = locateBlock(dest.p);
         assert(angle_orig_idx < 2 * m_angleResolution * m_angleResolution);
 
         WrapperMap::const_accessor const_access_dest;
@@ -256,12 +252,9 @@ public:
     float pdf(const Vector3f& di, const Intersection& origin) {
         int nx, ny, ox, oy;
         locateDirection(origin.shFrame.n, nx, ny);
-        locateDirectionHemisphere(di, ox, oy);
         assert(nx < 2 * m_angleResolution);
         assert(ny < m_angleResolution);
-        assert(ox < m_angleResolution);
-        assert(oy < m_angleResolution);
-        int block_idx = locateBlock(origin.p), angle_idx = getHemisphereMap(nx, ny, ox, oy);
+        int block_idx = locateBlock(origin.p), angle_idx = locateDirection(origin.shFrame.toWorld(di));
         assert(angle_idx < 2 * m_angleResolution * m_angleResolution);
 
         WrapperMap::const_accessor const_access;
@@ -426,10 +419,9 @@ public:
             return Color3f(0.0f);
         QTableSphereGuider::WrapperMap::const_accessor const_access;
         int block_idx = m_guider->locateBlock(its_.p);
-        int nx, ny, ox, oy;
+        int nx, ny;
         m_guider->locateDirection(its_.shFrame.n, nx, ny);
-        m_guider->locateDirectionHemisphere(its_.shFrame.toLocal(its.shFrame.n), ox, oy);
-        int angle_idx = m_guider->getHemisphereMap(nx, ny, ox, oy);
+        int angle_idx = m_guider->locateDirection(its.shFrame.n);
 
         if (m_guider->m_storage.find(const_access, block_idx)) {
             float maxq = 0.0f;
