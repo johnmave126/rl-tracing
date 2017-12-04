@@ -83,26 +83,28 @@ public:
         }
         if (m_importFilename.length() > 0) {
             // Import from file
-            std::ifstream file(m_importFilename);
+            std::ifstream file(m_importFilename, std::ios::in | std::ios::binary);
             if (!file.is_open()) {
                 throw NoriException("Cannot open file %s", m_importFilename.c_str());
             }
-	    cout << "Importing QTable ...";
-	    cout.flush();
+	        cout << "Importing QTable ...";
+	        cout.flush();
+            float bounds[6];
+            file.read((char*)bounds, 6 * sizeof(float));
+            m_sceneBox = BoundingBox3f(Point3f(bounds[0], bounds[1], bounds[2]), Point3f(bounds[3], bounds[4], bounds[5]));
+            m_sceneBlockSize = (m_sceneBox.max - m_sceneBox.min) / m_sceneResolution;
             while (!file.eof()) {
                 int block_idx;
+                file.read((char*)&block_idx, sizeof(int));
                 WrapperMap::accessor access;
-                file >> block_idx;
                 m_storage.insert(access, block_idx);
                 access->second.init(width, height);
-                for (int i = 0; i < width * height; i++) {
-                    file >> std::hexfloat >> access->second.map[i];
-		    file >> access->second.visit[i];
-                }
+                file.read((char*)access->second.map, width * height * sizeof(float));
+                file.read((char*)access->second.visit, width * height * sizeof(int));
                 access.release();
             }
             file.close();
-	    cout << " done." << endl;
+	        cout << " done." << endl;
         }
 
         //cout << "Testing locateDirection" << endl;
@@ -263,19 +265,19 @@ public:
 
     void done() {
         if (m_exportFilename.length() > 0) {
-            std::ofstream file(m_exportFilename);
+            std::ofstream file(m_exportFilename, std::ios::binary | std::ios::out);
             if (!file.is_open()) {
                 throw NoriException("Cannot open file %s to write", m_importFilename.c_str());
             }
             // Export to the file
             std::cout << "Exporting QTableSphere to " << m_exportFilename << " ... ";
             std::cout.flush();
+            float bounds[6] = { m_sceneBox.min.x(), m_sceneBox.min.y(), m_sceneBox.min.z(), m_sceneBox.max.x(), m_sceneBox.max.y(), m_sceneBox.max.z() };
+            file.write((char*)bounds, 6 * sizeof(float));
             for (WrapperMap::const_iterator it = m_storage.begin(); it != m_storage.end(); ++it) {
-                file << it->first << std::endl;
-                for (int i = 0; i < 2 * m_angleResolution * m_angleResolution; i++) {
-                    file << std::hexfloat << it->second.map[i] << ' ' << it->second.visit[i] << ' ';
-                }
-                file << std::endl;
+                file.write((char*)&it->first, sizeof(int));
+                file.write((char*)it->second.map, 2 * m_angleResolution * m_angleResolution * sizeof(float));
+                file.write((char*)it->second.visit, 2 * m_angleResolution * m_angleResolution * sizeof(int));
             }
             file.close();
             std::cout << "done." << std::endl;
