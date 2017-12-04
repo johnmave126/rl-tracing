@@ -385,7 +385,7 @@ public:
         if (!its.mesh->getBSDF()->isProbe())
             return Color3f(0.0f);
 
-        if (!scene->rayIntersect(Ray3f(its.p, -its.shFrame.n), its_))
+        if (!scene->rayIntersect(Ray3f(its.p, -its.shFrame.n), its_) || its_.mesh->getBSDF()->isProbe())
             return Color3f(0.0f);
         QTableSphereGuider::WrapperMap::const_accessor const_access;
         int block_idx = m_guider->locateBlock(its_.p),
@@ -401,7 +401,7 @@ public:
                     maxq = std::max(maxq, const_access->second.map[m_guider->getHemisphereMap(nx, ny, i, j)]);
                 }
             }
-            return Color3f(const_access->second.map[angle_idx] / maxq, 1.0f , 0.0f);
+            return Color3f(const_access->second.map[angle_idx] / maxq, 1.0f - std::min(1.0f, const_access->second.map[angle_idx] / maxq), 0.0f);
         }
         return Color3f(0.0f);
     }
