@@ -87,17 +87,22 @@ public:
             if (!file.is_open()) {
                 throw NoriException("Cannot open file %s", m_importFilename.c_str());
             }
+	    cout << "Importing QTable ...";
+	    cout.flush();
             while (!file.eof()) {
                 int block_idx;
                 WrapperMap::accessor access;
                 file >> block_idx;
                 m_storage.insert(access, block_idx);
+		access->second.init(width, height);
                 for (int i = 0; i < width * height; i++) {
-                    file >> std::hexfloat >> access->second.map[i] >> access->second.visit[i];
+                    file >> std::hexfloat >> access->second.map[i];
+		    file >> access->second.visit[i];
                 }
                 access.release();
             }
             file.close();
+	    cout << " done." << endl;
         }
     }
 
