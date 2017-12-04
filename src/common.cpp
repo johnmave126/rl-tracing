@@ -254,6 +254,8 @@ Point2f sphericalCoordinates(const Vector3f &v) {
     );
     if (result.y() < 0)
         result.y() += 2*M_PI;
+    if (result.y() >= 2 * M_PI)
+        result.y() -= 2 * M_PI;
     return result;
 }
 
