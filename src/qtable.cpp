@@ -162,14 +162,10 @@ public:
     }
 
     inline int locateDirection(const Vector3f& di, int &ix, int& iy) const {
-        float x = std::min(1 - Epsilon, di.z());
+        float x = std::min(1 - 1e-6f, di.z());
         float y = 0.0f;
-        y = atan(di.y() / di.x());
-        if (di.x() < 0) {
-            y += M_PI;
-        }
-        else if (di.y() < 0) {
-            y += 2 * M_PI;
+        if (di.z() < 1 - 1e-6f) {
+            y = sphericalCoordinates(di).y();
         }
         y /= 2 * M_PI;
         ix = x * m_angleResolution;
