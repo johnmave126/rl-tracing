@@ -170,11 +170,14 @@ public:
 
     void update(const Intersection& origin, const Intersection& dest, Sampler* sampler) {
         const Vector3f& ray = (dest.p - origin.p).normalized(),
-                dest_wi = dest.shFrame.toLocal(-ray);
-        int nx, ny;
-        int block_orig_idx = locateBlock(origin.p), angle_orig_idx = locateDirection(ray);
-        int block_dest_idx = locateBlock(dest.p);
+            dest_wi = dest.shFrame.toLocal(-ray),
+            orig_wi = origin.shFrame.toLocal(ray);
+        int nx, ny, ox, oy;
         locateDirection(dest.shFrame.n, nx, ny);
+        int block_orig_idx = locateBlock(origin.p);
+        locateDirectionHemisphere(orig_wi, ox, oy);
+        int block_dest_idx = locateBlock(dest.p),
+            angle_orig_idx = getHemisphereMap(nx, ny, ox, oy);
 
         WrapperMap::const_accessor const_access_dest;
         WrapperMap::accessor access_dest, access_orig;
@@ -234,9 +237,10 @@ public:
     }
 
     float pdf(const Vector3f& di, const Intersection& origin) {
-        int nx, ny;
-        int block_idx = locateBlock(origin.p), angle_idx = locateDirection(origin.shFrame.toWorld(di));
+        int nx, ny, ox, oy;
         locateDirection(origin.shFrame.n, nx, ny);
+        locateDirectionHemisphere(di, ox, oy);
+        int block_idx = locateBlock(origin.p), angle_idx = getHemisphereMap(nx, ny, ox, oy);
 
         WrapperMap::const_accessor const_access;
         WrapperMap::accessor access;
@@ -328,6 +332,29 @@ protected:
         return locateDirection(di, dummyx, dummyy);
     }
 
+    inline int locateDirectionHemisphere(const Vector3f& di, int &ix, int& iy) const {
+        float x = di.z();
+        float y = 0.0f;
+        if (x < 1 - Epsilon) {
+            y = atan(di.y() / di.x());
+            if (di.x() < 0) {
+                y += M_PI;
+            }
+            else if (di.y() < 0) {
+                y += 2 * M_PI;
+            }
+        }
+        y /= 2 * M_PI;
+        ix = x * m_angleResolution;
+        iy = y * m_angleResolution;
+        return ix * m_angleResolution + iy;
+    }
+
+    int locateDirectionHemisphere(const Vector3f& di) const {
+        int dummyx, dummyy;
+        return locateDirectionHemisphere(di, dummyx, dummyy);
+    }
+
     inline int& getHemisphereMap(int nx, int ny, int x, int y) {
         return m_hemishpereMap[(((nx * m_angleResolution) + ny) * m_angleResolution + x) + y];
     }
@@ -388,10 +415,11 @@ public:
         if (!scene->rayIntersect(Ray3f(its.p, -its.shFrame.n), its_) || its_.mesh->getBSDF()->isProbe())
             return Color3f(0.0f);
         QTableSphereGuider::WrapperMap::const_accessor const_access;
-        int block_idx = m_guider->locateBlock(its_.p),
-            angle_idx = m_guider->locateDirection(its.shFrame.n);
-        int nx, ny;
+        int block_idx = m_guider->locateBlock(its_.p);
+        int nx, ny, ox, oy;
         m_guider->locateDirection(its_.shFrame.n, nx, ny);
+        m_guider->locateDirectionHemisphere(its_.shFrame.toLocal(its.shFrame.n), ox, oy);
+        int angle_idx = m_guider->getHemisphereMap(nx, ny, ox, oy);
 
         if (m_guider->m_storage.find(const_access, block_idx)) {
             float maxq = 0.0f;
