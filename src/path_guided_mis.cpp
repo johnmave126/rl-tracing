@@ -58,7 +58,7 @@ public:
                     float emitter_pdf, surface_pdf;
                     emitter_pdf = 1.0f / scene->getEmitters().size();
                     surface_pdf = its.mesh->getEmitter()->pdf(its.p);
-                    float geom = (its.p - ray_.o).squaredNorm() / abs(its.shFrame.n.dot(ray_.d));
+                    float geom = (its.p - ray_.o).squaredNorm() / abs(Frame::cosTheta(wi));
                     float emitter_shading_pdf = emitter_pdf * surface_pdf * geom;
                     float hemisphere_shading_pdf = m_guider->pdf(last_its.shFrame.toLocal((its.p - last_its.p).normalized()), last_its);
                     bool isresult_nan = CHECK_VALID(result.r());

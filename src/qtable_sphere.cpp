@@ -12,6 +12,9 @@
 #include <fstream>
 #include <iostream>
 
+#undef NDEBUG
+#include <assert.h>
+
 NORI_NAMESPACE_BEGIN
 
 class QTableSphereGuider : public Guider {
@@ -123,6 +126,8 @@ public:
         int nx, ny;
         int block_idx = locateBlock(its.p);
         locateDirection(its.shFrame.n, nx, ny);
+        assert(nx < 2 * m_angleResolution);
+        assert(ny < m_angleResolution);
         Point2f result;
         WrapperMap::const_accessor const_access;
         WrapperMap::accessor access;
@@ -137,22 +142,28 @@ public:
                 weights[i] = weights[i - 1];
                 for (int j = 0; j < m_angleResolution; j++) {
                     int mapped_idx = this->getHemisphereMap(nx, ny, i - 1, j);
+                    assert(mapped_idx < 2 * m_angleResolution * m_angleResolution);
                     weights[i] += accessor->second.map[mapped_idx];
                 }
             }
             total_weight = weights[m_angleResolution];
             t = sample.x() * weights[m_angleResolution];
             x = std::upper_bound(weights, weights + m_angleResolution + 1, t) - weights - 1;
+            assert(x < m_angleResolution);
             px = x + (t - weights[x]) / (weights[x + 1] - weights[x]);
             for (int i = 1; i <= m_angleResolution; i++) {
                 weights[i] = weights[i - 1];
                 int mapped_idx = this->getHemisphereMap(nx, ny, x, i - 1);
+                assert(mapped_idx < 2 * m_angleResolution * m_angleResolution);
                 weights[i] += accessor->second.map[mapped_idx];
             }
             t = sample.y() * weights[m_angleResolution];
             y = std::upper_bound(weights, weights + m_angleResolution + 1, t) - weights - 1;
             py = y + (t - weights[y]) / (weights[y + 1] - weights[y]);
-            pdf = accessor->second.map[this->getHemisphereMap(nx, ny, x, y)] / total_weight * m_angleResolution * m_angleResolution * INV_TWOPI;
+            assert(y < m_angleResolution);
+            int idx = this->getHemisphereMap(nx, ny, x, y);
+            assert(idx < 2 * m_angleResolution * m_angleResolution);
+            pdf = accessor->second.map[idx] / total_weight * m_angleResolution * m_angleResolution * INV_TWOPI;
             delete[] weights;
             return Point2f(px / m_angleResolution, py / m_angleResolution);
         };
@@ -174,10 +185,16 @@ public:
             orig_wi = origin.shFrame.toLocal(ray);
         int nx, ny, ox, oy;
         locateDirection(dest.shFrame.n, nx, ny);
+        assert(nx < 2 * m_angleResolution);
+        assert(ny < m_angleResolution);
         int block_orig_idx = locateBlock(origin.p);
         locateDirectionHemisphere(orig_wi, ox, oy);
+        assert(ox < m_angleResolution);
+        assert(oy < m_angleResolution);
         int block_dest_idx = locateBlock(dest.p),
             angle_orig_idx = getHemisphereMap(nx, ny, ox, oy);
+
+        assert(angle_orig_idx < 2 * m_angleResolution * m_angleResolution);
 
         WrapperMap::const_accessor const_access_dest;
         WrapperMap::accessor access_dest, access_orig;
@@ -240,7 +257,12 @@ public:
         int nx, ny, ox, oy;
         locateDirection(origin.shFrame.n, nx, ny);
         locateDirectionHemisphere(di, ox, oy);
+        assert(nx < 2 * m_angleResolution);
+        assert(ny < m_angleResolution);
+        assert(ox < m_angleResolution);
+        assert(oy < m_angleResolution);
         int block_idx = locateBlock(origin.p), angle_idx = getHemisphereMap(nx, ny, ox, oy);
+        assert(angle_idx < 2 * m_angleResolution * m_angleResolution);
 
         WrapperMap::const_accessor const_access;
         WrapperMap::accessor access;
@@ -309,14 +331,16 @@ protected:
     }
 
     inline int locateDirection(const Vector3f& di, int &ix, int& iy) const {
-        float x = std::max(-1 + Epsilon, std::min(1 - Epsilon, di.z()));
+        float x = std::min(1 - 1e-6f, di.z());
         float y = 0.0f;
-        y = atan(di.y() / di.x());
-        if (di.x() < 0) {
-            y += M_PI;
-        }
-        else if (di.y() < 0) {
-            y += 2 * M_PI;
+        if (x > -1 + 1e-6f) {
+            y = atan(di.y() / di.x());
+            if (di.x() <= 0) {
+                y += M_PI;
+            }
+            else if (di.y() < 0) {
+                y += 2 * M_PI;
+            }
         }
         x = (x + 1.0f) / 2.0f;
         y /= 2.0f * M_PI;
@@ -331,10 +355,10 @@ protected:
     }
 
     inline int locateDirectionHemisphere(const Vector3f& di, int &ix, int& iy) const {
-        float x = std::min(1 - Epsilon, di.z());
+        float x = std::min(1 - 1e-6f, di.z());
         float y = 0.0f;
         y = atan(di.y() / di.x());
-        if (di.x() < 0) {
+        if (di.x() <= 0) {
             y += M_PI;
         }
         else if (di.y() < 0) {
