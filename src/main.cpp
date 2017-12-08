@@ -116,7 +116,28 @@ static void render(Scene *scene, const std::string &filename) {
         // map(range);
 
         /// Default: parallel rendering
-        tbb::parallel_for(range, map);
+        if (scene->isProgressive()) {
+            cout << "Progressive Mode" << endl;
+            cout.flush();
+            int maxSampleCount = scene->getSampler()->getSampleCount(),
+                lastSampleCount = maxSampleCount >> 1;
+            for (int curSampleCount = 1; curSampleCount <= lastSampleCount; curSampleCount <<= 1) {
+                cout << "Rendering " << curSampleCount << "spp ... ";
+                cout.flush();
+                scene->getSampler()->setSampleCount(curSampleCount);
+                tbb::parallel_for(range, map);
+                blockGenerator.reset();
+                cout << "done." << endl;
+                result.clear();
+            }
+            cout << "Rendering " << maxSampleCount << "spp ... ";
+            cout.flush();
+            scene->getSampler()->setSampleCount(maxSampleCount);
+            tbb::parallel_for(range, map);
+        }
+        else {
+            tbb::parallel_for(range, map);
+        }
 
         cout << "done. (took " << timer.elapsedString() << ")" << endl;
     });
@@ -143,6 +164,8 @@ static void render(Scene *scene, const std::string &filename) {
 
     /* Save using the OpenEXR format */
     bitmap->save(outputName);
+
+    scene->getIntegrator()->done();
 }
 
 int main(int argc, char **argv) {

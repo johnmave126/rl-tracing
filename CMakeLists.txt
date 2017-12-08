@@ -63,6 +63,7 @@ add_executable(nori
   include/nori/vector.h
   include/nori/warp.h
   include/nori/lightprobe.h
+  include/nori/guider.h
 
   # Source code files
   src/bitmap.cpp
@@ -91,6 +92,18 @@ add_executable(nori
   src/simple.cpp
   src/ao.cpp
   src/lightprobe.cpp
+  src/area.cpp
+  src/whitted.cpp
+  src/path_simple.cpp
+  src/path.cpp
+  src/roughdielectric.cpp
+  src/qtable.cpp
+  src/path_guided.cpp
+  src/path_naive.cpp
+  src/path_guided_simple.cpp
+  src/path_guided_mis.cpp
+  src/qtable_sphere.cpp
+  src/probe.cpp
 )
 
 add_definitions(${NANOGUI_EXTRA_DEFS})

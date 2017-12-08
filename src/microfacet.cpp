@@ -50,23 +50,45 @@ public:
 
     /// Evaluate the BRDF for the given pair of directions
     Color3f eval(const BSDFQueryRecord &bRec) const {
-    	throw NoriException("MicrofacetBRDF::eval(): not implemented!");
+		Vector3f wh = (bRec.wi + bRec.wo).normalized();
+		return m_kd * INV_PI + 
+			m_ks * Warp::squareToBeckmannPdf(wh, m_alpha) * fresnel(wh.dot(bRec.wi), m_extIOR, m_intIOR)
+				* G1(bRec.wi, wh) * G1(bRec.wo, wh) / (4 * Frame::cosTheta(bRec.wi) * Frame::cosTheta(bRec.wo) * Frame::cosTheta(wh));
     }
 
     /// Evaluate the sampling density of \ref sample() wrt. solid angles
     float pdf(const BSDFQueryRecord &bRec) const {
-    	throw NoriException("MicrofacetBRDF::pdf(): not implemented!");
+		if (Frame::cosTheta(bRec.wo) <= 0.0f || Frame::cosTheta(bRec.wi) <= 0.0f)
+			return 0.0f;
+		Vector3f wh = (bRec.wi + bRec.wo).normalized();
+		return m_ks * Warp::squareToBeckmannPdf(wh, m_alpha) / (4.0f * wh.dot(bRec.wo)) + (1 - m_ks) * std::max(Frame::cosTheta(bRec.wo), 0.0f)  * INV_PI;
     }
 
     /// Sample the BRDF
     Color3f sample(BSDFQueryRecord &bRec, const Point2f &_sample) const {
-    	throw NoriException("MicrofacetBRDF::sample(): not implemented!");
-
+		Point2f sample = _sample;
+		if (Frame::cosTheta(bRec.wi) <= 0)
+			return Color3f(0.0f);
+		if (sample.x() < m_ks) {
+			//Reflect
+			sample.x() /= m_ks;
+			Vector3f wn = Warp::squareToBeckmann(sample, m_alpha);
+			bRec.wo = (2.0f * wn.dot(bRec.wi) * wn - bRec.wi).normalized();
+		}
+		else {
+			//Diffuse
+			sample.x() = (sample.x() - m_ks) / (1.0f - m_ks);
+			bRec.wo = Warp::squareToCosineHemisphere(sample);
+		}
+		bRec.measure = ESolidAngle;
+		bRec.eta = 1.0f;
+		if (Frame::cosTheta(bRec.wo) <= 0)
+			return Color3f(0.0f);
         // Note: Once you have implemented the part that computes the scattered
         // direction, the last part of this function should simply return the
         // BRDF value divided by the solid angle density and multiplied by the
         // cosine factor from the reflection equation, i.e.
-        // return eval(bRec) * Frame::cosTheta(bRec.wo) / pdf(bRec);
+        return eval(bRec) * Frame::cosTheta(bRec.wo) / pdf(bRec);
     }
 
     bool isDiffuse() const {
@@ -97,6 +119,18 @@ private:
     float m_intIOR, m_extIOR;
     float m_ks;
     Color3f m_kd;
+
+	float G1(const Vector3f& wv, const Vector3f& wh) const {
+		if (wv.dot(wh) / wv.z() <= -Epsilon)
+			return 0;
+		float b = wv.z() / m_alpha / sqrt(1.0f - wv.z() * wv.z());
+		if (b < 1.6f) {
+			return (3.535f * b + 2.181f * b * b) / (1.0f + 2.276f * b + 2.577f * b * b);
+		}
+		else {
+			return 1.0f;
+		}
+	}
 };
 
 NORI_REGISTER_CLASS(Microfacet, "microfacet");

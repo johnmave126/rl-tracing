@@ -137,6 +137,13 @@ public:
      *      Maximum size of the individual blocks
      */
     BlockGenerator(const Vector2i &size, int blockSize);
+
+    /**
+    * \brief Reset the block generator to initial state
+    *
+    * This function is thread-safe
+    */
+    void reset();
     
     /**
      * \brief Return the next block to be rendered

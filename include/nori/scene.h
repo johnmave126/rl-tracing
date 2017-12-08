@@ -32,7 +32,7 @@ NORI_NAMESPACE_BEGIN
 class Scene : public NoriObject {
 public:
     /// Construct a new scene object
-    Scene(const PropertyList &);
+    Scene(const PropertyList & props);
 
     /// Release all memory
     virtual ~Scene();
@@ -57,6 +57,12 @@ public:
 
     /// Return a reference to an array containing all meshes
     const std::vector<Mesh *> &getMeshes() const { return m_meshes; }
+
+    /// Return a reference to an array containing all emitting meshes
+    const std::vector<Emitter *> &getEmitters() const { return m_emitters; }
+
+    /// Return whether the rendering should be progressive
+    bool isProgressive() const { return m_isprogressive; }
 
     /**
      * \brief Intersect a ray against all triangles stored in the scene
@@ -101,6 +107,11 @@ public:
         return m_accel->getBoundingBox();
     }
 
+    /// Take a [0,1]^2 uniform sample and return a random sample over all emitters
+    const Emitter* sampleEmitter(float& sample, float &pdf) const;
+
+	const Emitter* sampleEmitter(const float& sample, float &pdf) const;
+
     /**
      * \brief Inherited from \ref NoriObject::activate()
      *
@@ -118,10 +129,13 @@ public:
     EClassType getClassType() const { return EScene; }
 private:
     std::vector<Mesh *> m_meshes;
+    std::vector<Emitter *> m_emitters;
     Integrator *m_integrator = nullptr;
     Sampler *m_sampler = nullptr;
     Camera *m_camera = nullptr;
     Accel *m_accel = nullptr;
+    DiscretePDF m_emitterpdf;
+    bool m_isprogressive = false;
 };
 
 NORI_NAMESPACE_END

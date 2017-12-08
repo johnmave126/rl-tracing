@@ -26,8 +26,9 @@
 
 NORI_NAMESPACE_BEGIN
 
-Scene::Scene(const PropertyList &) {
+Scene::Scene(const PropertyList &props) {
     m_accel = new Accel();
+    m_isprogressive = props.getBoolean("progressive", false);
 }
 
 Scene::~Scene() {
@@ -38,14 +39,7 @@ Scene::~Scene() {
 }
 
 void Scene::activate() {
-	cout << "Building Scene...";
-	cout.flush();
-	Timer timer;
     m_accel->build();
-	cout << "done. (Interior nodes=" << m_accel->interiors()
-		<< ", Leaf nodes=" << m_accel->leaves()
-		<< ", Average on leaf nodes=" << m_accel->averageOnLeaves()
-		<< ", took " << timer.elapsedString() << ")" << endl;
 
     if (!m_integrator)
         throw NoriException("No integrator was specified!");
@@ -57,10 +51,31 @@ void Scene::activate() {
         m_sampler = static_cast<Sampler*>(
             NoriObjectFactory::createInstance("independent", PropertyList()));
     }
+    for (auto it = m_meshes.begin(); it != m_meshes.end(); ++it) {
+        if ((*it)->isEmitter()) {
+            m_emitters.push_back((*it)->getEmitter());
+            m_emitterpdf.append(1.0f);
+        }
+    }
+    m_emitterpdf.normalize();
 
     cout << endl;
     cout << "Configuration: " << toString() << endl;
     cout << endl;
+}
+
+const Emitter* Scene::sampleEmitter(float &sample, float &pdf) const {
+    if (m_emitters.size() == 0) {
+        return nullptr;
+    }
+    size_t idx = m_emitterpdf.sampleReuse(sample);
+    pdf = 1.0f / m_emitters.size();
+    return m_emitters[idx];
+}
+
+const Emitter* Scene::sampleEmitter(const float& sample, float &pdf) const {
+	float s = sample;
+	return sampleEmitter(s, pdf);
 }
 
 void Scene::addChild(NoriObject *obj) {
