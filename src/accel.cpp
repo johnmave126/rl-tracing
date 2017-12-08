@@ -503,4 +503,5 @@ bool Accel::rayIntersect(const Ray3f &_ray, Intersection &its, bool shadowRay) c
     return foundIntersection;
 }
 
+
 NORI_NAMESPACE_END

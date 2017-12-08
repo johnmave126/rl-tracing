@@ -148,4 +148,46 @@ float Warp::squareToLightProbePdf(const Point2f & p, const LightProbe & probe)
 	return topMap.rows() * topMap.cols() * topMap.coeff((double)p.y() * topMap.rows(), (double)p.x() * topMap.cols());
 }
 
+Point2f Warp::squareToLightProbe(const Point2f &sample, const LightProbe &probe) {
+	Point2d local = sample.cast<double>();
+	Point2d probed = Point2d(0.0f);
+	int startCol = 0, startRow = 0;
+	float baseUnit = 0.5f;
+	for (int i = 0; i < probe.getCount(); i++, baseUnit /= 2.0f, startCol <<= 1, startRow <<= 1) {
+		const LightProbe::Mipmap& map = probe.getMap(i);
+		double horRatioUp = map.coeff(startRow, startCol) + map.coeff(startRow, startCol + 1);
+		double horRatioBottom = map.coeff(startRow + 1, startCol) + map.coeff(startRow + 1, startCol + 1);
+		double horRatio = horRatioUp / (horRatioUp + horRatioBottom);
+		if (local.y() < horRatio) {
+			local.y() /= horRatio;
+			horRatio = horRatioUp;
+		}
+		else {
+			probed.y() += baseUnit;
+			local.y() = (local.y() - horRatio) / (1.0f - horRatio);
+			horRatio = horRatioBottom;
+			startRow++;
+		}
+		double vertRatio = map.coeff(startRow, startCol) / horRatio;
+		if (local.x() < vertRatio) {
+			local.x() /= vertRatio;
+		}
+		else {
+			probed.x() += baseUnit;
+			local.x() = (local.x() - vertRatio) / (1.0f - vertRatio);
+			startCol++;
+		}
+	}
+	return (probed + local * (2 * baseUnit)).cast<float>();
+}
+
+float Warp::squareToLightProbePdf(const Point2f & p, const LightProbe & probe)
+{
+	if (((p.array() < 0).any() || (p.array() >= 1).any())) {
+		return 0.0f;
+	}
+	const LightProbe::Mipmap& topMap = probe.getMap(probe.getCount() - 1);
+	return topMap.rows() * topMap.cols() * topMap.coeff(p.y() * topMap.rows(), p.x() * topMap.cols());
+}
+
 NORI_NAMESPACE_END

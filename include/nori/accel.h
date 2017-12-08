@@ -97,6 +97,7 @@ public:
         return m_bbox;
     }
 
+
 protected:
     /**
      * \brief Compute the mesh and triangle indices corresponding to 
