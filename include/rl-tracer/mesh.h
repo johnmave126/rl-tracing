@@ -18,10 +18,10 @@
 
 #pragma once
 
-#include <nori/object.h>
-#include <nori/frame.h>
-#include <nori/bbox.h>
-#include <nori/dpdf.h>
+#include <tracer/object.h>
+#include <tracer/frame.h>
+#include <tracer/bbox.h>
+#include <tracer/dpdf.h>
 
 NORI_NAMESPACE_BEGIN
 

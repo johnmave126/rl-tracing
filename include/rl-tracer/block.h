@@ -22,8 +22,8 @@
 
 #pragma once
 
-#include <nori/color.h>
-#include <nori/vector.h>
+#include <tracer/color.h>
+#include <tracer/vector.h>
 #include <tbb/mutex.h>
 
 #define NORI_BLOCK_SIZE 32 /* Block size used for parallelization */

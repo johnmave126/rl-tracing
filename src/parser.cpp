@@ -16,8 +16,8 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <nori/parser.h>
-#include <nori/proplist.h>
+#include <tracer/parser.h>
+#include <tracer/proplist.h>
 #include <Eigen/Geometry>
 #include <pugixml.hpp>
 #include <fstream>

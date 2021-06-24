@@ -1,5 +1,5 @@
-#include <nori/emitter.h>
-#include <nori/mesh.h>
+#include <tracer/emitter.h>
+#include <tracer/mesh.h>
 
 NORI_NAMESPACE_BEGIN
 

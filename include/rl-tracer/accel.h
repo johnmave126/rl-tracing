@@ -19,7 +19,7 @@
 #if !defined(__NORI_BVH_H)
 #define __NORI_BVH_H
 
-#include <nori/mesh.h>
+#include <tracer/mesh.h>
 
 NORI_NAMESPACE_BEGIN
 

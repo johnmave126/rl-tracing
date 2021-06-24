@@ -16,8 +16,8 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <nori/bsdf.h>
-#include <nori/warp.h>
+#include <tracer/bsdf.h>
+#include <tracer/warp.h>
 #include <pcg32.h>
 #include <hypothesis.h>
 #include <fstream>

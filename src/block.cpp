@@ -16,10 +16,10 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <nori/block.h>
-#include <nori/bitmap.h>
-#include <nori/rfilter.h>
-#include <nori/bbox.h>
+#include <tracer/block.h>
+#include <tracer/bitmap.h>
+#include <tracer/rfilter.h>
+#include <tracer/bbox.h>
 #include <tbb/tbb.h>
 
 NORI_NAMESPACE_BEGIN

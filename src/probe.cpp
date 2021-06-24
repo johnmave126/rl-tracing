@@ -16,7 +16,7 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <nori/bsdf.h>
+#include <tracer/bsdf.h>
 
 NORI_NAMESPACE_BEGIN
 

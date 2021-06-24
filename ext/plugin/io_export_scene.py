@@ -1,11 +1,11 @@
 
 bl_info = {
-    "name": "Export Nori scenes format",
+    "name": "Export XML scenes format",
     "author": "Adrien Gruson",
     "version": (0, 1),
     "blender": (2, 5, 7),
-    "location": "File > Export > Nori exporter (.xml)",
-    "description": "Export Nori scenes format (.xml)",
+    "location": "File > Export > XML exporter (.xml)",
+    "description": "Export XML scenes format (.xml)",
     "warning": "",
     "wiki_url": "",
     "tracker_url": "",
@@ -20,7 +20,7 @@ from xml.dom.minidom import Document
 # Main class exporter
 
 
-class NoriWritter:
+class TracerWritter:
 
     def verbose(self, text):
         print(text)
@@ -59,7 +59,7 @@ class NoriWritter:
         return transform
 
     def write(self, exportLight, nbSamples):
-        """Main method to write the blender scene into Nori format
+        """Main method to write the blender scene into Tracer format
         It will export as follows:
          1) write integrator configuration
          2) write samples information (number, distribution)
@@ -174,7 +174,7 @@ class NoriWritter:
 
     def __createBSDFEntry(self, slot):
         """method responsible to the auto-conversion
-        between Blender internal BSDF (not Cycles!) and Nori BSDF
+        between Blender internal BSDF (not Cycles!) and Tracer BSDF
 
         For more advanced implementation: 
         http://tinyurl.com/nnhxwuh
@@ -331,12 +331,12 @@ from bpy.props import StringProperty, IntProperty, BoolProperty
 from bpy_extras.io_utils import ExportHelper
 
 
-class NoriExporter(bpy.types.Operator, ExportHelper):
-    """Export a blender scene into Nori scene format"""
+class TracerExporter(bpy.types.Operator, ExportHelper):
+    """Export a blender scene into Tracer scene format"""
 
     # add to menu
-    bl_idname = "export.nori"
-    bl_label = "Export Nori scene"
+    bl_idname = "export.tracer"
+    bl_label = "Export Tracer scene"
 
     # filtering file names
     filename_ext = ".xml"
@@ -348,7 +348,7 @@ class NoriExporter(bpy.types.Operator, ExportHelper):
 
     export_light = BoolProperty(
         name="Export light",
-        description="Export light to Nori",
+        description="Export light to Tracer",
         default=True)
 
     nb_samples = IntProperty(name="Numbers of camera rays",
@@ -356,8 +356,8 @@ class NoriExporter(bpy.types.Operator, ExportHelper):
                              default=32)
 
     def execute(self, context):
-        nori = NoriWritter(context, self.filepath)
-        nori.write(self.export_light, self.nb_samples)
+        tracer = TracerWritter(context, self.filepath)
+        tracer.write(self.export_light, self.nb_samples)
         return {'FINISHED'}
 
     def invoke(self, context, event):
@@ -372,11 +372,11 @@ class NoriExporter(bpy.types.Operator, ExportHelper):
 def menu_export(self, context):
     import os
     default_path = os.path.splitext(bpy.data.filepath)[0] + ".xml"
-    self.layout.operator(NoriExporter.bl_idname,
-                         text="Export Nori scenes...").filepath = default_path
+    self.layout.operator(TracerExporter.bl_idname,
+                         text="Export Tracer scenes...").filepath = default_path
 
 
-# Register Nori exporter inside blender
+# Register Tracer exporter inside blender
 def register():
     bpy.utils.register_module(__name__)
     bpy.types.INFO_MT_file_export.append(menu_export)

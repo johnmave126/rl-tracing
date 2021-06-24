@@ -18,8 +18,8 @@
 
 #pragma once
 
-#include <nori/common.h>
-#include <nori/ray.h>
+#include <tracer/common.h>
+#include <tracer/ray.h>
 
 NORI_NAMESPACE_BEGIN
 

@@ -18,8 +18,8 @@
 
 #pragma once
 
-#include <nori/object.h>
-#include <nori/frame.h>
+#include <tracer/object.h>
+#include <tracer/frame.h>
 
 NORI_NAMESPACE_BEGIN
 

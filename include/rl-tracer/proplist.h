@@ -18,8 +18,8 @@
 
 #pragma once
 
-#include <nori/color.h>
-#include <nori/transform.h>
+#include <tracer/color.h>
+#include <tracer/transform.h>
 #include <map>
 
 NORI_NAMESPACE_BEGIN

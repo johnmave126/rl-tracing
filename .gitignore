@@ -1,6 +1,6 @@
 /build
 .DS_Store
-/nori
+/tracer
 /warptest
 /ext_build
 CMakeCache.txt

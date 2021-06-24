@@ -16,9 +16,9 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <nori/warp.h>
-#include <nori/bsdf.h>
-#include <nori/lightprobe.h>
+#include <tracer/warp.h>
+#include <tracer/bsdf.h>
+#include <tracer/lightprobe.h>
 #include <nanogui/screen.h>
 #include <nanogui/glutil.h>
 #include <nanogui/label.h>
@@ -47,17 +47,17 @@
 using namespace nanogui;
 using namespace std;
 
-using nori::NoriException;
-using nori::NoriObjectFactory;
-using nori::Point2f;
-using nori::Point2i;
-using nori::Point3f;
-using nori::Warp;
-using nori::PropertyList;
-using nori::BSDF;
-using nori::BSDFQueryRecord;
-using nori::Color3f;
-using nori::LightProbe;
+using tracer::NoriException;
+using tracer::NoriObjectFactory;
+using tracer::Point2f;
+using tracer::Point2i;
+using tracer::Point3f;
+using tracer::Warp;
+using tracer::PropertyList;
+using tracer::BSDF;
+using tracer::BSDFQueryRecord;
+using tracer::Color3f;
+using tracer::LightProbe;
 
 class WarpTest : public Screen {
 public:
@@ -500,7 +500,7 @@ public:
                 else if (warpType == MicrofacetBRDF) {
                     BSDFQueryRecord bRec(m_bRec);
                     bRec.wo = v;
-                    bRec.measure = nori::ESolidAngle;
+                    bRec.measure = tracer::ESolidAngle;
                     return m_brdf->pdf(bRec);
                 } else {
                     throw NoriException("Invalid warp type");

@@ -16,21 +16,21 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <nori/parser.h>
-#include <nori/scene.h>
-#include <nori/camera.h>
-#include <nori/block.h>
-#include <nori/timer.h>
-#include <nori/bitmap.h>
-#include <nori/sampler.h>
-#include <nori/integrator.h>
-#include <nori/gui.h>
+#include <tracer/parser.h>
+#include <tracer/scene.h>
+#include <tracer/camera.h>
+#include <tracer/block.h>
+#include <tracer/timer.h>
+#include <tracer/bitmap.h>
+#include <tracer/sampler.h>
+#include <tracer/integrator.h>
+#include <tracer/gui.h>
 #include <tbb/parallel_for.h>
 #include <tbb/blocked_range.h>
 #include <filesystem/resolver.h>
 #include <thread>
 
-using namespace nori;
+using namespace tracer;
 
 static void renderBlock(const Scene *scene, Sampler *sampler, ImageBlock &block) {
     const Camera *camera = scene->getCamera();

@@ -1,11 +1,11 @@
 
 bl_info = {
-    "name": "Import Nori scenes format",
+    "name": "Import XML scenes format",
     "author": "Shuhao Tan",
     "version": (0, 1),
     "blender": (2, 7, 9),
-    "location": "File > Import > Nori importer (.xml)",
-    "description": "Import Nori scenes format (.xml)",
+    "location": "File > Import > XML importer (.xml)",
+    "description": "Import XML scenes format (.xml)",
     "warning": "",
     "wiki_url": "",
     "tracker_url": "",
@@ -24,7 +24,7 @@ from mathutils import Matrix, Vector
 # Main class exporter
 
 
-class NoriReader:
+class TracerReader:
 
     def verbose(self, text):
         print(text)
@@ -169,20 +169,20 @@ from bpy.props import StringProperty, IntProperty, BoolProperty
 from bpy_extras.io_utils import ExportHelper
 
 
-class NoriImporter(bpy.types.Operator, ExportHelper):
-    """Export a blender scene into Nori scene format"""
+class TracerImporter(bpy.types.Operator, ExportHelper):
+    """Export a blender scene into Tracer scene format"""
 
     # add to menu
-    bl_idname = "import.nori"
-    bl_label = "Import Nori scene"
+    bl_idname = "import.tracer"
+    bl_label = "Import Tracer scene"
 
     # filtering file names
     filename_ext = ".xml"
     filter_glob = StringProperty(default="*.xml", options={'HIDDEN'})
 
     def execute(self, context):
-        nori = NoriReader(context, self.filepath)
-        nori.read()
+        tracer = TracerReader(context, self.filepath)
+        tracer.read()
         return {'FINISHED'}
 
     def invoke(self, context, event):
@@ -197,11 +197,11 @@ class NoriImporter(bpy.types.Operator, ExportHelper):
 def menu_import(self, context):
     import os
     default_path = os.path.splitext(bpy.data.filepath)[0] + ".xml"
-    self.layout.operator(NoriImporter.bl_idname,
-                         text="Import Nori scenes...").filepath = default_path
+    self.layout.operator(TracerImporter.bl_idname,
+                         text="Import Tracer scenes...").filepath = default_path
 
 
-# Register Nori exporter inside blender
+# Register Tracer exporter inside blender
 def register():
     bpy.utils.register_module(__name__)
     bpy.types.INFO_MT_file_import.append(menu_import)

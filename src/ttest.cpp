@@ -16,11 +16,11 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <nori/scene.h>
-#include <nori/bsdf.h>
-#include <nori/camera.h>
-#include <nori/integrator.h>
-#include <nori/sampler.h>
+#include <tracer/scene.h>
+#include <tracer/bsdf.h>
+#include <tracer/camera.h>
+#include <tracer/integrator.h>
+#include <tracer/sampler.h>
 #include <hypothesis.h>
 #include <pcg32.h>
 

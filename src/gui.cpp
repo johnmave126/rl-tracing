@@ -1,5 +1,5 @@
-#include <nori/gui.h>
-#include <nori/block.h>
+#include <tracer/gui.h>
+#include <tracer/block.h>
 #include <nanogui/glutil.h>
 #include <nanogui/label.h>
 #include <nanogui/slider.h>

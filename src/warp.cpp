@@ -16,9 +16,9 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <nori/warp.h>
-#include <nori/vector.h>
-#include <nori/frame.h>
+#include <tracer/warp.h>
+#include <tracer/vector.h>
+#include <tracer/frame.h>
 
 NORI_NAMESPACE_BEGIN
 

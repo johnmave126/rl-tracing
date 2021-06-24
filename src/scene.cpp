@@ -16,13 +16,13 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <nori/scene.h>
-#include <nori/bitmap.h>
-#include <nori/integrator.h>
-#include <nori/sampler.h>
-#include <nori/camera.h>
-#include <nori/emitter.h>
-#include <nori/timer.h>
+#include <tracer/scene.h>
+#include <tracer/bitmap.h>
+#include <tracer/integrator.h>
+#include <tracer/sampler.h>
+#include <tracer/camera.h>
+#include <tracer/emitter.h>
+#include <tracer/timer.h>
 
 NORI_NAMESPACE_BEGIN
 

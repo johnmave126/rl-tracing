@@ -16,8 +16,8 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <nori/mesh.h>
-#include <nori/timer.h>
+#include <tracer/mesh.h>
+#include <tracer/timer.h>
 #include <filesystem/resolver.h>
 #include <unordered_map>
 #include <fstream>

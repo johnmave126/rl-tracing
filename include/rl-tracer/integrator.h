@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <nori/object.h>
+#include <tracer/object.h>
 
 NORI_NAMESPACE_BEGIN
 

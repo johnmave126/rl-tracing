@@ -18,9 +18,9 @@
 
 #pragma once
 
-#include <nori/common.h>
-#include <nori/sampler.h>
-#include <nori/lightprobe.h>
+#include <tracer/common.h>
+#include <tracer/sampler.h>
+#include <tracer/lightprobe.h>
 
 NORI_NAMESPACE_BEGIN
 

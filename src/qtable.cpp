@@ -1,10 +1,10 @@
 #include <functional>
-#include <nori/guider.h>
-#include <nori/scene.h>
-#include <nori/sampler.h>
-#include <nori/emitter.h>
-#include <nori/bsdf.h>
-#include <nori/warp.h>
+#include <tracer/guider.h>
+#include <tracer/scene.h>
+#include <tracer/sampler.h>
+#include <tracer/emitter.h>
+#include <tracer/bsdf.h>
+#include <tracer/warp.h>
 #include <tbb/spin_rw_mutex.h>
 #include <tbb/concurrent_vector.h>
 #include <tbb/concurrent_hash_map.h>

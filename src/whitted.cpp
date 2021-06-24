@@ -1,8 +1,8 @@
-#include <nori/integrator.h>
-#include <nori/scene.h>
-#include <nori/emitter.h>
-#include <nori/sampler.h>
-#include <nori/bsdf.h>
+#include <tracer/integrator.h>
+#include <tracer/scene.h>
+#include <tracer/emitter.h>
+#include <tracer/sampler.h>
+#include <tracer/bsdf.h>
 
 NORI_NAMESPACE_BEGIN
 

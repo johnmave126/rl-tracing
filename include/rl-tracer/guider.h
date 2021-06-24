@@ -1,7 +1,7 @@
 #pragma once
 
-#include <nori/object.h>
-#include <nori/mesh.h>
+#include <tracer/object.h>
+#include <tracer/mesh.h>
 
 NORI_NAMESPACE_BEGIN
 

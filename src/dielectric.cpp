@@ -16,8 +16,8 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <nori/bsdf.h>
-#include <nori/frame.h>
+#include <tracer/bsdf.h>
+#include <tracer/frame.h>
 
 inline float power5(float x) {
 	float y = x * x;

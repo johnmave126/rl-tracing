@@ -16,9 +16,9 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <nori/lightprobe.h>
-#include <nori/vector.h>
-#include <nori/bitmap.h>
+#include <tracer/lightprobe.h>
+#include <tracer/vector.h>
+#include <tracer/bitmap.h>
 
 NORI_NAMESPACE_BEGIN
 

@@ -16,9 +16,9 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <nori/camera.h>
-#include <nori/rfilter.h>
-#include <nori/warp.h>
+#include <tracer/camera.h>
+#include <tracer/rfilter.h>
+#include <tracer/warp.h>
 #include <Eigen/Geometry>
 
 NORI_NAMESPACE_BEGIN

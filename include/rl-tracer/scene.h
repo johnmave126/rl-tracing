@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <nori/accel.h>
+#include <tracer/accel.h>
 
 NORI_NAMESPACE_BEGIN
 

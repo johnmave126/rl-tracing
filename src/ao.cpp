@@ -1,7 +1,7 @@
-#include <nori/integrator.h>
-#include <nori/scene.h>
-#include <nori/sampler.h>
-#include <nori/warp.h>
+#include <tracer/integrator.h>
+#include <tracer/scene.h>
+#include <tracer/sampler.h>
+#include <tracer/warp.h>
 
 NORI_NAMESPACE_BEGIN
 

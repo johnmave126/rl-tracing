@@ -1,4 +1,4 @@
-Blender Plugin for Nori by Adrien Gruson
+Blender Plugin for by Adrien Gruson
 -> http://people.irisa.fr/Adrien.Gruson/biskra_2012.html
 
 Installation

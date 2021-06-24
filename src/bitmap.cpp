@@ -16,7 +16,7 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <nori/bitmap.h>
+#include <tracer/bitmap.h>
 #include <ImfInputFile.h>
 #include <ImfOutputFile.h>
 #include <ImfChannelList.h>

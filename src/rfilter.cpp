@@ -16,7 +16,7 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <nori/rfilter.h>
+#include <tracer/rfilter.h>
 
 NORI_NAMESPACE_BEGIN
 

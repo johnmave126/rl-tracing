@@ -1,10 +1,10 @@
 cmake_minimum_required (VERSION 2.8.3)
-project(nori)
+project(rl-tracing)
 
 add_subdirectory(ext ext_build)
 
 include_directories(
-  # Nori include files
+  # include files
   ${CMAKE_CURRENT_SOURCE_DIR}/include
   # tinyformat string formatting library
   ${TFM_INCLUDE_DIR}
@@ -34,36 +34,36 @@ include_directories(
 )
 
 # The following lines build the main executable. If you add a source
-# code file to Nori, be sure to include it in this list.
-add_executable(nori
+# code file to tracer, be sure to include it in this list.
+add_executable(rl-tracer
 
   # Header files
-  include/nori/bbox.h
-  include/nori/bitmap.h
-  include/nori/block.h
-  include/nori/bsdf.h
-  include/nori/accel.h
-  include/nori/camera.h
-  include/nori/color.h
-  include/nori/common.h
-  include/nori/dpdf.h
-  include/nori/frame.h
-  include/nori/integrator.h
-  include/nori/emitter.h
-  include/nori/mesh.h
-  include/nori/object.h
-  include/nori/parser.h
-  include/nori/proplist.h
-  include/nori/ray.h
-  include/nori/rfilter.h
-  include/nori/sampler.h
-  include/nori/scene.h
-  include/nori/timer.h
-  include/nori/transform.h
-  include/nori/vector.h
-  include/nori/warp.h
-  include/nori/lightprobe.h
-  include/nori/guider.h
+  include/rl-tracer/bbox.h
+  include/rl-tracer/bitmap.h
+  include/rl-tracer/block.h
+  include/rl-tracer/bsdf.h
+  include/rl-tracer/accel.h
+  include/rl-tracer/camera.h
+  include/rl-tracer/color.h
+  include/rl-tracer/common.h
+  include/rl-tracer/dpdf.h
+  include/rl-tracer/frame.h
+  include/rl-tracer/integrator.h
+  include/rl-tracer/emitter.h
+  include/rl-tracer/mesh.h
+  include/rl-tracer/object.h
+  include/rl-tracer/parser.h
+  include/rl-tracer/proplist.h
+  include/rl-tracer/ray.h
+  include/rl-tracer/rfilter.h
+  include/rl-tracer/sampler.h
+  include/rl-tracer/scene.h
+  include/rl-tracer/timer.h
+  include/rl-tracer/transform.h
+  include/rl-tracer/vector.h
+  include/rl-tracer/warp.h
+  include/rl-tracer/lightprobe.h
+  include/rl-tracer/guider.h
 
   # Source code files
   src/bitmap.cpp
@@ -110,11 +110,11 @@ add_definitions(${NANOGUI_EXTRA_DEFS})
 
 # The following lines build the warping test application
 add_executable(warptest
-  include/nori/color.h
-  include/nori/warp.h
-  include/nori/vector.h
-  include/nori/bitmap.h
-  include/nori/lightprobe.h
+  include/rl-tracer/color.h
+  include/rl-tracer/warp.h
+  include/rl-tracer/vector.h
+  include/rl-tracer/bitmap.h
+  include/rl-tracer/lightprobe.h
   src/bitmap.cpp
   src/warp.cpp
   src/warptest.cpp
@@ -125,7 +125,7 @@ add_executable(warptest
   src/lightprobe.cpp
 )
 
-target_link_libraries(nori tbb_static pugixml IlmImf nanogui ${NANOGUI_EXTRA_LIBS})
+target_link_libraries(rl-tracer tbb_static pugixml IlmImf nanogui ${NANOGUI_EXTRA_LIBS})
 target_link_libraries(warptest tbb_static IlmImf nanogui ${NANOGUI_EXTRA_LIBS})
 
 # vim: set et ts=2 sw=2 ft=cmake nospell:

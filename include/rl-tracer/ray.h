@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <nori/vector.h>
+#include <tracer/vector.h>
 
 NORI_NAMESPACE_BEGIN
 

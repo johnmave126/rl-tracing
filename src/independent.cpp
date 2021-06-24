@@ -16,8 +16,8 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <nori/sampler.h>
-#include <nori/block.h>
+#include <tracer/sampler.h>
+#include <tracer/block.h>
 #include <pcg32.h>
 
 NORI_NAMESPACE_BEGIN

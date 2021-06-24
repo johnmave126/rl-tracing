@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <nori/ray.h>
+#include <tracer/ray.h>
 
 NORI_NAMESPACE_BEGIN
 

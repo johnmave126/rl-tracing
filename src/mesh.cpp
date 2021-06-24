@@ -16,11 +16,11 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <nori/mesh.h>
-#include <nori/bbox.h>
-#include <nori/bsdf.h>
-#include <nori/emitter.h>
-#include <nori/warp.h>
+#include <tracer/mesh.h>
+#include <tracer/bbox.h>
+#include <tracer/bsdf.h>
+#include <tracer/emitter.h>
+#include <tracer/warp.h>
 #include <Eigen/Geometry>
 
 NORI_NAMESPACE_BEGIN
