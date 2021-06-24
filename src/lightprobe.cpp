@@ -1,13 +1,13 @@
 /*
-    This file is part of Nori, a simple educational ray tracer
+    This file is part of Tracer, a simple educational ray tracer
 
     Copyright (c) 2015 by Wenzel Jakob
 
-    Nori is free software; you can redistribute it and/or modify
+    [redacted] is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License Version 3
     as published by the Free Software Foundation.
 
-    Nori is distributed in the hope that it will be useful,
+    [redacted] is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
     GNU General Public License for more details.
@@ -20,7 +20,7 @@
 #include <tracer/vector.h>
 #include <tracer/bitmap.h>
 
-NORI_NAMESPACE_BEGIN
+TRACER_NAMESPACE_BEGIN
 
 static const int MultiplyDeBruijnBitPosition[64] =
 {
@@ -31,11 +31,11 @@ static const int MultiplyDeBruijnBitPosition[64] =
 LightProbe::LightProbe(const std::string &filename): loaded(true) {
 	Bitmap bitmap(filename);
 	if (bitmap.cols() != bitmap.rows()) {
-		throw NoriException("Width and height of a light probe must match!");
+		throw TracerException("Width and height of a light probe must match!");
 	}
 	uint64_t size = bitmap.cols();
 	if ((size & -size) != size) {
-		throw NoriException("Size of a light probe must be power of 2!");
+		throw TracerException("Size of a light probe must be power of 2!");
 	}
 	// Find the power of 2 in the size
 	int M = MultiplyDeBruijnBitPosition[((uint32_t)(size * 0x077CB531U)) >> 27];
@@ -74,4 +74,4 @@ LightProbe::LightProbe(const std::string &filename): loaded(true) {
 	std::reverse(std::begin(mipmaps), std::end(mipmaps));
 }
 
-NORI_NAMESPACE_END
+TRACER_NAMESPACE_END

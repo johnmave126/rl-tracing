@@ -8,12 +8,12 @@
 # This CMake file is responsible for compiling dependency libraries and
 # setting up suitable compiler flags for various platforms. You do not
 # need to read or change anything in this file; see CMakeLists.txt in
-# the main Nori folder instead.
+# the main [redacted] folder instead.
 
 include(CheckCXXCompilerFlag)
 
 if(NOT IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/openexr/OpenEXR")
-  message(FATAL_ERROR "The Nori dependencies are missing! "
+  message(FATAL_ERROR "The [redacted] dependencies are missing! "
     "You probably did not clone the project with --recursive. It is possible to recover "
     "by calling \"git submodule update --init --recursive\"")
 endif()

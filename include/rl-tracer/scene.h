@@ -1,13 +1,13 @@
 /*
-    This file is part of Nori, a simple educational ray tracer
+    This file is part of Tracer, a simple educational ray tracer
 
     Copyright (c) 2015 by Wenzel Jakob
 
-    Nori is free software; you can redistribute it and/or modify
+    [redacted] is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License Version 3
     as published by the Free Software Foundation.
 
-    Nori is distributed in the hope that it will be useful,
+    [redacted] is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
     GNU General Public License for more details.
@@ -20,7 +20,7 @@
 
 #include <tracer/accel.h>
 
-NORI_NAMESPACE_BEGIN
+TRACER_NAMESPACE_BEGIN
 
 /**
  * \brief Main scene data structure
@@ -29,7 +29,7 @@ NORI_NAMESPACE_BEGIN
  * coordinating rendering jobs. It also provides useful query routines that
  * are mostly used by the \ref Integrator implementations.
  */
-class Scene : public NoriObject {
+class Scene : public TracerObject {
 public:
     /// Construct a new scene object
     Scene(const PropertyList & props);
@@ -113,7 +113,7 @@ public:
 	const Emitter* sampleEmitter(const float& sample, float &pdf) const;
 
     /**
-     * \brief Inherited from \ref NoriObject::activate()
+     * \brief Inherited from \ref TracerObject::activate()
      *
      * Initializes the internal data structures (kd-tree,
      * emitter sampling data structures, etc.)
@@ -121,7 +121,7 @@ public:
     void activate();
 
     /// Add a child object to the scene (meshes, integrators etc.)
-    void addChild(NoriObject *obj);
+    void addChild(TracerObject *obj);
 
     /// Return a string summary of the scene (for debugging purposes)
     std::string toString() const;
@@ -138,4 +138,4 @@ private:
     bool m_isprogressive = false;
 };
 
-NORI_NAMESPACE_END
+TRACER_NAMESPACE_END

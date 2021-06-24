@@ -1,13 +1,13 @@
 /*
-    This file is part of Nori, a simple educational ray tracer
+    This file is part of Tracer, a simple educational ray tracer
 
     Copyright (c) 2015 by Wenzel Jakob
 
-    Nori is free software; you can redistribute it and/or modify
+    [redacted] is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License Version 3
     as published by the Free Software Foundation.
 
-    Nori is distributed in the hope that it will be useful,
+    [redacted] is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
     GNU General Public License for more details.
@@ -69,7 +69,7 @@ static void render(Scene *scene, const std::string &filename) {
     scene->getIntegrator()->preprocess(scene);
 
     /* Create a block generator (i.e. a work scheduler) */
-    BlockGenerator blockGenerator(outputSize, NORI_BLOCK_SIZE);
+    BlockGenerator blockGenerator(outputSize, TRACER_BLOCK_SIZE);
 
     /* Allocate memory for the entire output image and clear it */
     ImageBlock result(outputSize, camera->getReconstructionFilter());
@@ -77,7 +77,7 @@ static void render(Scene *scene, const std::string &filename) {
 
     /* Create a window that visualizes the partially rendered result */
     nanogui::init();
-    NoriScreen *screen = new NoriScreen(result);
+    TracerScreen *screen = new TracerScreen(result);
 
     /* Do the following in parallel and asynchronously */
     std::thread render_thread([&] {
@@ -90,7 +90,7 @@ static void render(Scene *scene, const std::string &filename) {
         auto map = [&](const tbb::blocked_range<int> &range) {
             /* Allocate memory for a small image block to be rendered
                by the current thread */
-            ImageBlock block(Vector2i(NORI_BLOCK_SIZE),
+            ImageBlock block(Vector2i(TRACER_BLOCK_SIZE),
                 camera->getReconstructionFilter());
 
             /* Create a clone of the sampler for the current thread */
@@ -183,10 +183,10 @@ int main(int argc, char **argv) {
                resources (OBJ files, textures) using relative paths */
             getFileResolver()->prepend(path.parent_path());
 
-            std::unique_ptr<NoriObject> root(loadFromXML(argv[1]));
+            std::unique_ptr<TracerObject> root(loadFromXML(argv[1]));
 
             /* When the XML root object is a scene, start rendering it .. */
-            if (root->getClassType() == NoriObject::EScene)
+            if (root->getClassType() == TracerObject::EScene)
                 render(static_cast<Scene *>(root.get()), argv[1]);
         } else if (path.extension() == "exr") {
             /* Alternatively, provide a basic OpenEXR image viewer */
@@ -194,7 +194,7 @@ int main(int argc, char **argv) {
             ImageBlock block(Vector2i((int) bitmap.cols(), (int) bitmap.rows()), nullptr);
             block.fromBitmap(bitmap);
             nanogui::init();
-            NoriScreen *screen = new NoriScreen(block);
+            TracerScreen *screen = new TracerScreen(block);
             nanogui::mainloop();
             delete screen;
             nanogui::shutdown();

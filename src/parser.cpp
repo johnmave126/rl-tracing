@@ -1,13 +1,13 @@
 /*
-    This file is part of Nori, a simple educational ray tracer
+    This file is part of Tracer, a simple educational ray tracer
 
     Copyright (c) 2015 by Wenzel Jakob
 
-    Nori is free software; you can redistribute it and/or modify
+    [redacted] is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License Version 3
     as published by the Free Software Foundation.
 
-    Nori is distributed in the hope that it will be useful,
+    [redacted] is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
     GNU General Public License for more details.
@@ -23,9 +23,9 @@
 #include <fstream>
 #include <set>
 
-NORI_NAMESPACE_BEGIN
+TRACER_NAMESPACE_BEGIN
 
-NoriObject *loadFromXML(const std::string &filename) {
+TracerObject *loadFromXML(const std::string &filename) {
     /* Load the XML file using 'pugi' (a tiny self-contained XML parser implemented in C++) */
     pugi::xml_document doc;
     pugi::xml_parse_result result = doc.load_file(filename.c_str());
@@ -51,26 +51,26 @@ NoriObject *loadFromXML(const std::string &filename) {
     };
 
     if (!result) /* There was a parser / file IO error */
-        throw NoriException("Error while parsing \"%s\": %s (at %s)", filename, result.description(), offset(result.offset));
+        throw TracerException("Error while parsing \"%s\": %s (at %s)", filename, result.description(), offset(result.offset));
 
     /* Set of supported XML tags */
     enum ETag {
         /* Object classes */
-        EScene                = NoriObject::EScene,
-        EMesh                 = NoriObject::EMesh,
-        EBSDF                 = NoriObject::EBSDF,
-        EPhaseFunction        = NoriObject::EPhaseFunction,
-        EEmitter            = NoriObject::EEmitter,
-        EMedium               = NoriObject::EMedium,
-        ECamera               = NoriObject::ECamera,
-        EIntegrator           = NoriObject::EIntegrator,
-        ESampler              = NoriObject::ESampler,
-        ETest                 = NoriObject::ETest,
-        EGuider               = NoriObject::EGuider,
-        EReconstructionFilter = NoriObject::EReconstructionFilter,
+        EScene                = TracerObject::EScene,
+        EMesh                 = TracerObject::EMesh,
+        EBSDF                 = TracerObject::EBSDF,
+        EPhaseFunction        = TracerObject::EPhaseFunction,
+        EEmitter            = TracerObject::EEmitter,
+        EMedium               = TracerObject::EMedium,
+        ECamera               = TracerObject::ECamera,
+        EIntegrator           = TracerObject::EIntegrator,
+        ESampler              = TracerObject::ESampler,
+        ETest                 = TracerObject::ETest,
+        EGuider               = TracerObject::EGuider,
+        EReconstructionFilter = TracerObject::EReconstructionFilter,
 
         /* Properties */
-        EBoolean = NoriObject::EClassTypeCount,
+        EBoolean = TracerObject::EClassTypeCount,
         EInteger,
         EFloat,
         EString,
@@ -120,54 +120,54 @@ NoriObject *loadFromXML(const std::string &filename) {
         for (auto attr : node.attributes()) {
             auto it = attrs.find(attr.name());
             if (it == attrs.end())
-                throw NoriException("Error while parsing \"%s\": unexpected attribute \"%s\" in \"%s\" at %s",
+                throw TracerException("Error while parsing \"%s\": unexpected attribute \"%s\" in \"%s\" at %s",
                                     filename, attr.name(), node.name(), offset(node.offset_debug()));
             attrs.erase(it);
         }
         if (!attrs.empty())
-            throw NoriException("Error while parsing \"%s\": missing attribute \"%s\" in \"%s\" at %s",
+            throw TracerException("Error while parsing \"%s\": missing attribute \"%s\" in \"%s\" at %s",
                                 filename, *attrs.begin(), node.name(), offset(node.offset_debug()));
     };
 
     Eigen::Affine3f transform;
 
-    /* Helper function to parse a Nori XML node (recursive) */
-    std::function<NoriObject *(pugi::xml_node &, PropertyList &, int)> parseTag = [&](
-        pugi::xml_node &node, PropertyList &list, int parentTag) -> NoriObject * {
+    /* Helper function to parse a [redacted] XML node (recursive) */
+    std::function<TracerObject *(pugi::xml_node &, PropertyList &, int)> parseTag = [&](
+        pugi::xml_node &node, PropertyList &list, int parentTag) -> TracerObject * {
         /* Skip over comments */
         if (node.type() == pugi::node_comment || node.type() == pugi::node_declaration)
             return nullptr;
 
         if (node.type() != pugi::node_element)
-            throw NoriException(
+            throw TracerException(
                 "Error while parsing \"%s\": unexpected content at %s",
                 filename, offset(node.offset_debug()));
 
         /* Look up the name of the current element */
         auto it = tags.find(node.name());
         if (it == tags.end())
-            throw NoriException("Error while parsing \"%s\": unexpected tag \"%s\" at %s",
+            throw TracerException("Error while parsing \"%s\": unexpected tag \"%s\" at %s",
                                 filename, node.name(), offset(node.offset_debug()));
         int tag = it->second;
 
         /* Perform some safety checks to make sure that the XML tree really makes sense */
         bool hasParent            = parentTag != EInvalid;
-        bool parentIsObject       = hasParent && parentTag < NoriObject::EClassTypeCount;
-        bool currentIsObject      = tag < NoriObject::EClassTypeCount;
+        bool parentIsObject       = hasParent && parentTag < TracerObject::EClassTypeCount;
+        bool currentIsObject      = tag < TracerObject::EClassTypeCount;
         bool parentIsTransform    = parentTag == ETransform;
         bool currentIsTransformOp = tag == ETranslate || tag == ERotate || tag == EScale || tag == ELookAt || tag == EMatrix;
 
         if (!hasParent && !currentIsObject)
-            throw NoriException("Error while parsing \"%s\": root element \"%s\" must be a Nori object (at %s)",
+            throw TracerException("Error while parsing \"%s\": root element \"%s\" must be a [redacted] object (at %s)",
                                 filename, node.name(), offset(node.offset_debug()));
 
         if (parentIsTransform != currentIsTransformOp)
-            throw NoriException("Error while parsing \"%s\": transform nodes "
+            throw TracerException("Error while parsing \"%s\": transform nodes "
                                 "can only contain transform operations (at %s)",
                                 filename,  offset(node.offset_debug()));
 
         if (hasParent && !parentIsObject && !(parentIsTransform && currentIsTransformOp))
-            throw NoriException("Error while parsing \"%s\": node \"%s\" requires a Nori object as parent (at %s)",
+            throw TracerException("Error while parsing \"%s\": node \"%s\" requires a [redacted] object as parent (at %s)",
                                 filename, node.name(), offset(node.offset_debug()));
 
         if (tag == EScene)
@@ -176,30 +176,30 @@ NoriObject *loadFromXML(const std::string &filename) {
             transform.setIdentity();
 
         PropertyList propList;
-        std::vector<NoriObject *> children;
+        std::vector<TracerObject *> children;
         for (pugi::xml_node &ch: node.children()) {
-            NoriObject *child = parseTag(ch, propList, tag);
+            TracerObject *child = parseTag(ch, propList, tag);
             if (child)
                 children.push_back(child);
         }
 
-        NoriObject *result = nullptr;
+        TracerObject *result = nullptr;
         try {
             if (currentIsObject) {
                 check_attributes(node, { "type" });
 
                 /* This is an object, first instantiate it */
-                result = NoriObjectFactory::createInstance(
+                result = TracerObjectFactory::createInstance(
                     node.attribute("type").value(),
                     propList
                 );
 
                 if (result->getClassType() != (int) tag) {
-                    throw NoriException(
+                    throw TracerException(
                         "Unexpectedly constructed an object "
                         "of type <%s> (expected type <%s>): %s",
-                        NoriObject::classTypeName(result->getClassType()),
-                        NoriObject::classTypeName((NoriObject::EClassType) tag),
+                        TracerObject::classTypeName(result->getClassType()),
+                        TracerObject::classTypeName((TracerObject::EClassType) tag),
                         result->toString());
                 }
 
@@ -264,7 +264,7 @@ NoriObject *loadFromXML(const std::string &filename) {
                             check_attributes(node, { "value" });
                             std::vector<std::string> tokens = tokenize(node.attribute("value").value());
                             if (tokens.size() != 16)
-                                throw NoriException("Expected 16 values");
+                                throw TracerException("Expected 16 values");
                             Eigen::Matrix4f matrix;
                             for (int i=0; i<4; ++i)
                                 for (int j=0; j<4; ++j)
@@ -303,11 +303,11 @@ NoriObject *loadFromXML(const std::string &filename) {
                         }
                         break;
 
-                    default: throw NoriException("Unhandled element \"%s\"", node.name());
+                    default: throw TracerException("Unhandled element \"%s\"", node.name());
                 };
             }
-        } catch (const NoriException &e) {
-            throw NoriException("Error while parsing \"%s\": %s (at %s)", filename,
+        } catch (const TracerException &e) {
+            throw TracerException("Error while parsing \"%s\": %s (at %s)", filename,
                                 e.what(), offset(node.offset_debug()));
         }
 
@@ -318,4 +318,4 @@ NoriObject *loadFromXML(const std::string &filename) {
     return parseTag(*doc.begin(), list, EInvalid);
 }
 
-NORI_NAMESPACE_END
+TRACER_NAMESPACE_END

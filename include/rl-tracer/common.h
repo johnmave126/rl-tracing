@@ -1,13 +1,13 @@
 /*
-    This file is part of Nori, a simple educational ray tracer
+    This file is part of Tracer, a simple educational ray tracer
 
     Copyright (c) 2015 by Wenzel Jakob
 
-    Nori is free software; you can redistribute it and/or modify
+    [redacted] is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License Version 3
     as published by the Free Software Foundation.
 
-    Nori is distributed in the hope that it will be useful,
+    [redacted] is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
     GNU General Public License for more details.
@@ -25,7 +25,7 @@
 #define NOMINMAX                /* Don't override min/max */
 #endif
 
-/* Include the basics needed by any Nori file */
+/* Include the basics needed by any [redacted] file */
 #include <iostream>
 #include <algorithm>
 #include <vector>
@@ -35,12 +35,12 @@
 #include <tinyformat.h>
 
 /* Convenience definitions */
-#define NORI_NAMESPACE_BEGIN namespace tracer {
-#define NORI_NAMESPACE_END }
+#define TRACER_NAMESPACE_BEGIN namespace tracer {
+#define TRACER_NAMESPACE_END }
 
-#if defined(__NORI_APPLE__NORI_)
+#if defined(__TRACER_APPLE__TRACER_)
 #define PLATFORM_MACOS
-#elif defined(__NORI_linux__NORI_)
+#elif defined(__TRACER_linux__TRACER_)
 #define PLATFORM_LINUX
 #elif defined(WIN32)
 #define PLATFORM_WINDOWS
@@ -65,7 +65,7 @@ namespace filesystem {
     class resolver;
 };
 
-NORI_NAMESPACE_BEGIN
+TRACER_NAMESPACE_BEGIN
 
 /* Forward declarations */
 template <typename Scalar, int Dimension>  struct TVector;
@@ -73,7 +73,7 @@ template <typename Scalar, int Dimension>  struct TPoint;
 template <typename Point, typename Vector> struct TRay;
 template <typename Point>                  struct TBoundingBox;
 
-/* Basic Nori data structures (vectors, points, rays, bounding boxes,
+/* Basic [redacted] data structures (vectors, points, rays, bounding boxes,
    kd-trees) are oblivious to the underlying data type and dimension.
    The following list of typedefs establishes some convenient aliases
    for specific types. */
@@ -127,9 +127,9 @@ class KDTree;
 class Emitter;
 struct EmitterQueryRecord;
 class Mesh;
-class NoriObject;
-class NoriObjectFactory;
-class NoriScreen;
+class TracerObject;
+class TracerObjectFactory;
+class TracerScreen;
 class PhaseFunction;
 class ReconstructionFilter;
 class Sampler;
@@ -144,10 +144,10 @@ typedef Eigen::Matrix<float,    Eigen::Dynamic, Eigen::Dynamic> MatrixXf;
 typedef Eigen::Matrix<uint32_t, Eigen::Dynamic, Eigen::Dynamic> MatrixXu;
 
 /// Simple exception class, which stores a human-readable error description
-class NoriException : public std::runtime_error {
+class TracerException : public std::runtime_error {
 public:
     /// Variadic template constructor to support printf-style arguments
-    template <typename... Args> NoriException(const char *fmt, const Args &... args) 
+    template <typename... Args> TracerException(const char *fmt, const Args &... args) 
      : std::runtime_error(tfm::format(fmt, args...)) { }
 };
 
@@ -265,4 +265,4 @@ extern float fresnel(float cosThetaI, float extIOR, float intIOR);
  */
 extern filesystem::resolver *getFileResolver();
 
-NORI_NAMESPACE_END
+TRACER_NAMESPACE_END

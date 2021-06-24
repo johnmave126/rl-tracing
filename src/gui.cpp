@@ -5,10 +5,10 @@
 #include <nanogui/slider.h>
 #include <nanogui/layout.h>
 
-NORI_NAMESPACE_BEGIN
+TRACER_NAMESPACE_BEGIN
 
-NoriScreen::NoriScreen(const ImageBlock &block)
- : nanogui::Screen(block.getSize() + Vector2i(0, 36), "Nori", false), m_block(block) {
+TracerScreen::TracerScreen(const ImageBlock &block)
+ : nanogui::Screen(block.getSize() + Vector2i(0, 36), "Tracer", false), m_block(block) {
     using namespace nanogui;
 
     /* Add some UI elements to adjust the exposure value */
@@ -86,12 +86,12 @@ NoriScreen::NoriScreen(const ImageBlock &block)
     setVisible(true);
 }
 
-NoriScreen::~NoriScreen() {
+TracerScreen::~TracerScreen() {
     glDeleteTextures(1, &m_texture);
     delete m_shader;
 }
 
-void NoriScreen::drawContents() {
+void TracerScreen::drawContents() {
     /* Reload the partially rendered image onto the GPU */
     m_block.lock();
     int borderSize = m_block.getBorderSize();
@@ -114,4 +114,4 @@ void NoriScreen::drawContents() {
     glViewport(0, 0, mFBSize[0], mFBSize[1]);
 }
 
-NORI_NAMESPACE_END
+TRACER_NAMESPACE_END

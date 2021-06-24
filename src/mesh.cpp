@@ -1,13 +1,13 @@
 /*
-    This file is part of Nori, a simple educational ray tracer
+    This file is part of Tracer, a simple educational ray tracer
 
     Copyright (c) 2015 by Wenzel Jakob
 
-    Nori is free software; you can redistribute it and/or modify
+    [redacted] is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License Version 3
     as published by the Free Software Foundation.
 
-    Nori is distributed in the hope that it will be useful,
+    [redacted] is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
     GNU General Public License for more details.
@@ -23,7 +23,7 @@
 #include <tracer/warp.h>
 #include <Eigen/Geometry>
 
-NORI_NAMESPACE_BEGIN
+TRACER_NAMESPACE_BEGIN
 
 Mesh::Mesh() { }
 
@@ -36,7 +36,7 @@ void Mesh::activate() {
     if (!m_bsdf) {
         /* If no material was assigned, instantiate a diffuse BRDF */
         m_bsdf = static_cast<BSDF *>(
-            NoriObjectFactory::createInstance("diffuse", PropertyList()));
+            TracerObjectFactory::createInstance("diffuse", PropertyList()));
     }
     // Create Discrete PDF for the surface and compute total area
     m_facepdf.reserve(m_F.cols());
@@ -127,11 +127,11 @@ Point3f Mesh::getCentroid(uint32_t index) const {
          m_V.col(m_F(2, index)));
 }
 
-void Mesh::addChild(NoriObject *obj) {
+void Mesh::addChild(TracerObject *obj) {
     switch (obj->getClassType()) {
         case EBSDF:
             if (m_bsdf)
-                throw NoriException(
+                throw TracerException(
                     "Mesh: tried to register multiple BSDF instances!");
             m_bsdf = static_cast<BSDF *>(obj);
             break;
@@ -139,14 +139,14 @@ void Mesh::addChild(NoriObject *obj) {
         case EEmitter: {
                 Emitter *emitter = static_cast<Emitter *>(obj);
                 if (m_emitter)
-                    throw NoriException(
+                    throw TracerException(
                         "Mesh: tried to register multiple Emitter instances!");
                 m_emitter = emitter;
             }
             break;
 
         default:
-            throw NoriException("Mesh::addChild(<%s>) is not supported!",
+            throw TracerException("Mesh::addChild(<%s>) is not supported!",
                                 classTypeName(obj->getClassType()));
     }
 }
@@ -190,4 +190,4 @@ std::string Intersection::toString() const {
     );
 }
 
-NORI_NAMESPACE_END
+TRACER_NAMESPACE_END

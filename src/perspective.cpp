@@ -1,13 +1,13 @@
 /*
-    This file is part of Nori, a simple educational ray tracer
+    This file is part of Tracer, a simple educational ray tracer
 
     Copyright (c) 2015 by Wenzel Jakob
 
-    Nori is free software; you can redistribute it and/or modify
+    [redacted] is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License Version 3
     as published by the Free Software Foundation.
 
-    Nori is distributed in the hope that it will be useful,
+    [redacted] is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
     GNU General Public License for more details.
@@ -21,7 +21,7 @@
 #include <tracer/warp.h>
 #include <Eigen/Geometry>
 
-NORI_NAMESPACE_BEGIN
+TRACER_NAMESPACE_BEGIN
 
 /**
  * \brief Perspective camera with depth of field
@@ -82,7 +82,7 @@ public:
         /* If no reconstruction filter was assigned, instantiate a Gaussian filter */
         if (!m_rfilter)
             m_rfilter = static_cast<ReconstructionFilter *>(
-                NoriObjectFactory::createInstance("gaussian", PropertyList()));
+                TracerObjectFactory::createInstance("gaussian", PropertyList()));
     }
 
     Color3f sampleRay(Ray3f &ray,
@@ -108,16 +108,16 @@ public:
         return Color3f(1.0f);
     }
 
-    void addChild(NoriObject *obj) {
+    void addChild(TracerObject *obj) {
         switch (obj->getClassType()) {
             case EReconstructionFilter:
                 if (m_rfilter)
-                    throw NoriException("Camera: tried to register multiple reconstruction filters!");
+                    throw TracerException("Camera: tried to register multiple reconstruction filters!");
                 m_rfilter = static_cast<ReconstructionFilter *>(obj);
                 break;
 
             default:
-                throw NoriException("Camera::addChild(<%s>) is not supported!",
+                throw TracerException("Camera::addChild(<%s>) is not supported!",
                     classTypeName(obj->getClassType()));
         }
     }
@@ -149,5 +149,5 @@ private:
     float m_farClip;
 };
 
-NORI_REGISTER_CLASS(PerspectiveCamera, "perspective");
-NORI_NAMESPACE_END
+TRACER_REGISTER_CLASS(PerspectiveCamera, "perspective");
+TRACER_NAMESPACE_END

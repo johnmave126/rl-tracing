@@ -1,13 +1,13 @@
 /*
-    This file is part of Nori, a simple educational ray tracer
+    This file is part of Tracer, a simple educational ray tracer
 
     Copyright (c) 2015 by Wenzel Jakob
 
-    Nori is free software; you can redistribute it and/or modify
+    [redacted] is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License Version 3
     as published by the Free Software Foundation.
 
-    Nori is distributed in the hope that it will be useful,
+    [redacted] is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
     GNU General Public License for more details.
@@ -22,11 +22,11 @@
 #include <tracer/transform.h>
 #include <map>
 
-NORI_NAMESPACE_BEGIN
+TRACER_NAMESPACE_BEGIN
 
 /**
  * \brief This is an associative container used to supply the constructors
- * of \ref NoriObject subclasses with parameter information.
+ * of \ref TracerObject subclasses with parameter information.
  */
 class PropertyList {
 public:
@@ -134,4 +134,4 @@ private:
     std::map<std::string, Property> m_properties;
 };
 
-NORI_NAMESPACE_END
+TRACER_NAMESPACE_END

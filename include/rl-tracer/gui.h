@@ -1,13 +1,13 @@
 /*
-    This file is part of Nori, a simple educational ray tracer
+    This file is part of Tracer, a simple educational ray tracer
 
     Copyright (c) 2015 by Wenzel Jakob
 
-    Nori is free software; you can redistribute it and/or modify
+    [redacted] is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License Version 3
     as published by the Free Software Foundation.
 
-    Nori is distributed in the hope that it will be useful,
+    [redacted] is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
     GNU General Public License for more details.
@@ -21,12 +21,12 @@
 #include <tracer/common.h>
 #include <nanogui/screen.h>
 
-NORI_NAMESPACE_BEGIN
+TRACER_NAMESPACE_BEGIN
 
-class NoriScreen : public nanogui::Screen {
+class TracerScreen : public nanogui::Screen {
 public:
-    NoriScreen(const ImageBlock &block);
-    virtual ~NoriScreen();
+    TracerScreen(const ImageBlock &block);
+    virtual ~TracerScreen();
 
     void drawContents();
 private:
@@ -37,4 +37,4 @@ private:
     float m_scale = 1.f;
 };
 
-NORI_NAMESPACE_END
+TRACER_NAMESPACE_END

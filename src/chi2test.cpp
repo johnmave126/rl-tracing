@@ -1,13 +1,13 @@
 /*
-    This file is part of Nori, a simple educational ray tracer
+    This file is part of Tracer, a simple educational ray tracer
 
     Copyright (c) 2015 by Wenzel Jakob
 
-    Nori is free software; you can redistribute it and/or modify
+    [redacted] is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License Version 3
     as published by the Free Software Foundation.
 
-    Nori is distributed in the hope that it will be useful,
+    [redacted] is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
     GNU General Public License for more details.
@@ -32,14 +32,14 @@
  * =======================================================================
  */
 
-NORI_NAMESPACE_BEGIN
+TRACER_NAMESPACE_BEGIN
 
 /**
  * \brief Statistical test for validating that an importance sampling routine
  * (e.g. from a BSDF) produces a distribution that agrees with what the
  * implementation claims via its associated density function.
  */
-class ChiSquareTest : public NoriObject {
+class ChiSquareTest : public TracerObject {
 public:
     ChiSquareTest(const PropertyList &propList) {
         /* The null hypothesis will be rejected when the associated
@@ -77,14 +77,14 @@ public:
             delete bsdf;
     }
 
-    void addChild(NoriObject *obj) {
+    void addChild(TracerObject *obj) {
         switch (obj->getClassType()) {
             case EBSDF:
                 m_bsdfs.push_back(static_cast<BSDF *>(obj));
                 break;
 
             default:
-                throw NoriException("ChiSquareTest::addChild(<%s>) is not supported!",
+                throw TracerException("ChiSquareTest::addChild(<%s>) is not supported!",
                     classTypeName(obj->getClassType()));
         }
     }
@@ -223,5 +223,5 @@ private:
     std::vector<BSDF *> m_bsdfs;
 };
 
-NORI_REGISTER_CLASS(ChiSquareTest, "chi2test");
-NORI_NAMESPACE_END
+TRACER_REGISTER_CLASS(ChiSquareTest, "chi2test");
+TRACER_NAMESPACE_END

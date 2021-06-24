@@ -3,16 +3,16 @@
 #include <tracer/object.h>
 #include <tracer/mesh.h>
 
-NORI_NAMESPACE_BEGIN
+TRACER_NAMESPACE_BEGIN
 
 /**
  * \brief Ray guider interface
  * 
- * This class provides an abstract interface to guider in Nori and
+ * This class provides an abstract interface to guider in [redacted] and
  * exposes the ability to sample a ray direction. Mostly likely a
  * Reinforced Learning technique will be behind it.
  */
-class Guider : public NoriObject {
+class Guider : public TracerObject {
 public:
     virtual ~Guider() { }
 
@@ -77,4 +77,4 @@ public:
     EClassType getClassType() const { return EGuider; }
 };
 
-NORI_NAMESPACE_END
+TRACER_NAMESPACE_END

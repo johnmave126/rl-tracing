@@ -7,28 +7,28 @@
 #include <tracer/guider.h>
 #include <tracer/warp.h>
 
-NORI_NAMESPACE_BEGIN
+TRACER_NAMESPACE_BEGIN
 
 class PathGuidedIntegrator : public Integrator {
 public:
     PathGuidedIntegrator(const PropertyList &props) { }
 
-    void addChild(NoriObject *obj) {
+    void addChild(TracerObject *obj) {
         switch (obj->getClassType()) {
             case EGuider:
                 if (m_guider)
-                    throw NoriException("There can only be one guider per integrator!");
+                    throw TracerException("There can only be one guider per integrator!");
                 m_guider = static_cast<Guider*>(obj);
                 break;
             default:
-                throw NoriException("PathGuidedIntegrator::addChild(<%s>) is not supported!",
+                throw TracerException("PathGuidedIntegrator::addChild(<%s>) is not supported!",
                     classTypeName(obj->getClassType()));
         }
     }
 
     void activate() {
         if (!m_guider)
-            throw NoriException("No guider was specified!");
+            throw TracerException("No guider was specified!");
     }
 
     void preprocess(const Scene *scene) {
@@ -90,5 +90,5 @@ protected:
     Guider* m_guider = nullptr;
 };
 
-NORI_REGISTER_CLASS(PathGuidedIntegrator, "path_guided");
-NORI_NAMESPACE_END
+TRACER_REGISTER_CLASS(PathGuidedIntegrator, "path_guided");
+TRACER_NAMESPACE_END

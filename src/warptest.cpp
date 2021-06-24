@@ -1,13 +1,13 @@
 /*
-    This file is part of Nori, a simple educational ray tracer
+    This file is part of Tracer, a simple educational ray tracer
 
     Copyright (c) 2015 by Wenzel Jakob
 
-    Nori is free software; you can redistribute it and/or modify
+    [redacted] is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License Version 3
     as published by the Free Software Foundation.
 
-    Nori is distributed in the hope that it will be useful,
+    [redacted] is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
     GNU General Public License for more details.
@@ -47,8 +47,8 @@
 using namespace nanogui;
 using namespace std;
 
-using tracer::NoriException;
-using tracer::NoriObjectFactory;
+using tracer::TracerException;
+using tracer::TracerObjectFactory;
 using tracer::Point2f;
 using tracer::Point2i;
 using tracer::Point3f;
@@ -161,7 +161,7 @@ public:
             PropertyList list;
             list.setFloat("alpha", parameterValue);
             list.setColor("kd", Color3f(0.f));
-            m_brdf = std::unique_ptr<BSDF>((BSDF *) NoriObjectFactory::createInstance("microfacet", list));
+            m_brdf = std::unique_ptr<BSDF>((BSDF *) TracerObjectFactory::createInstance("microfacet", list));
 
             float bsdfAngle = M_PI * (m_angleSlider->value() - 0.5f);
             m_bRec.wi =
@@ -174,7 +174,7 @@ public:
 			try {
 				m_light = LightProbe(probe_file);
 			}
-			catch (const NoriException &e) {
+			catch (const TracerException &e) {
 				m_warpTypeBox->setSelectedIndex(0);
 				refresh();
 				new MessageDialog(this, MessageDialog::Type::Warning, "Error", "An error occurred: " + std::string(e.what()));
@@ -192,7 +192,7 @@ public:
         MatrixXf positions, values;
         try {
             generatePoints(m_pointCount, pointType, warpType, parameterValue, positions, values);
-        } catch (const NoriException &e) {
+        } catch (const TracerException &e) {
             m_warpTypeBox->setSelectedIndex(0);
             refresh();
             new MessageDialog(this, MessageDialog::Type::Warning, "Error", "An error occurred: " + std::string(e.what()));
@@ -503,7 +503,7 @@ public:
                     bRec.measure = tracer::ESolidAngle;
                     return m_brdf->pdf(bRec);
                 } else {
-                    throw NoriException("Invalid warp type");
+                    throw TracerException("Invalid warp type");
                 }
             }
         };
@@ -526,7 +526,7 @@ public:
                 ptr[y * xres + x] = hypothesis::adaptiveSimpson2D(
                     integrand, yStart, xStart, yEnd, xEnd) * scale;
 				if (ptr[y * xres + x] < 0)
-					throw NoriException("The Pdf() function returned negative values!");
+					throw TracerException("The Pdf() function returned negative values!");
             }
         }
 
@@ -631,7 +631,7 @@ public:
         testBtn->setCallback([&]{
             try {
                 runTest();
-            } catch (const NoriException &e) {
+            } catch (const TracerException &e) {
                 new MessageDialog(this, MessageDialog::Type::Warning, "Error", "An error occurred: " + std::string(e.what()));
             }
         });

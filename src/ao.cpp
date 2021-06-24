@@ -3,7 +3,7 @@
 #include <tracer/sampler.h>
 #include <tracer/warp.h>
 
-NORI_NAMESPACE_BEGIN
+TRACER_NAMESPACE_BEGIN
 
 class AOIntegrator : public Integrator {
 public:
@@ -24,5 +24,5 @@ public:
 	}
 };
 
-NORI_REGISTER_CLASS(AOIntegrator, "ao");
-NORI_NAMESPACE_END
+TRACER_REGISTER_CLASS(AOIntegrator, "ao");
+TRACER_NAMESPACE_END

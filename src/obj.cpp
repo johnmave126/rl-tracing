@@ -1,13 +1,13 @@
 /*
-    This file is part of Nori, a simple educational ray tracer
+    This file is part of Tracer, a simple educational ray tracer
 
     Copyright (c) 2015 by Wenzel Jakob
 
-    Nori is free software; you can redistribute it and/or modify
+    [redacted] is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License Version 3
     as published by the Free Software Foundation.
 
-    Nori is distributed in the hope that it will be useful,
+    [redacted] is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
     GNU General Public License for more details.
@@ -22,7 +22,7 @@
 #include <unordered_map>
 #include <fstream>
 
-NORI_NAMESPACE_BEGIN
+TRACER_NAMESPACE_BEGIN
 
 /**
  * \brief Loader for Wavefront OBJ triangle meshes
@@ -37,7 +37,7 @@ public:
 
         std::ifstream is(filename.str());
         if (is.fail())
-            throw NoriException("Unable to open OBJ file \"%s\"!", filename);
+            throw TracerException("Unable to open OBJ file \"%s\"!", filename);
         Transform trafo = propList.getTransform("toWorld", Transform());
 
         cout << "Loading \"" << filename << "\" .. ";
@@ -144,7 +144,7 @@ protected:
             std::vector<std::string> tokens = tokenize(string, "/", true);
 
             if (tokens.size() < 1 || tokens.size() > 3)
-                throw NoriException("Invalid vertex data: \"%s\"", string);
+                throw TracerException("Invalid vertex data: \"%s\"", string);
 
             p = toUInt(tokens[0]);
 
@@ -171,5 +171,5 @@ protected:
     };
 };
 
-NORI_REGISTER_CLASS(WavefrontOBJ, "obj");
-NORI_NAMESPACE_END
+TRACER_REGISTER_CLASS(WavefrontOBJ, "obj");
+TRACER_NAMESPACE_END

@@ -1,7 +1,7 @@
 #include <tracer/integrator.h>
 #include <tracer/scene.h>
 
-NORI_NAMESPACE_BEGIN
+TRACER_NAMESPACE_BEGIN
 
 class SimpleIntegrator : public Integrator {
 public:
@@ -37,5 +37,5 @@ private:
 	Color3f m_energy;
 };
 
-NORI_REGISTER_CLASS(SimpleIntegrator, "simple");
-NORI_NAMESPACE_END
+TRACER_REGISTER_CLASS(SimpleIntegrator, "simple");
+TRACER_NAMESPACE_END

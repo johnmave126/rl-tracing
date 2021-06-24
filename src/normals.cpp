@@ -1,7 +1,7 @@
 #include <tracer/integrator.h>
 #include <tracer/scene.h>
 
-NORI_NAMESPACE_BEGIN
+TRACER_NAMESPACE_BEGIN
 
 class NormalIntegrator : public Integrator {
 public:
@@ -26,5 +26,5 @@ public:
 	}
 };
 
-NORI_REGISTER_CLASS(NormalIntegrator, "normals");
-NORI_NAMESPACE_END
+TRACER_REGISTER_CLASS(NormalIntegrator, "normals");
+TRACER_NAMESPACE_END

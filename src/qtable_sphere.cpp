@@ -15,7 +15,7 @@
 #undef NDEBUG
 #include <assert.h>
 
-NORI_NAMESPACE_BEGIN
+TRACER_NAMESPACE_BEGIN
 
 class QTableSphereGuider : public Guider {
 protected:
@@ -48,7 +48,7 @@ public:
             m_alpha = props.getFloat("alpha");
             m_useVisit = false;
         }
-        catch (NoriException e) {
+        catch (TracerException e) {
             //alpha doesn't exist
         }
         //Store m_angleResolution x m_angleResolution array for each element in (2 x m_angleResolution) x m_angleResolution array
@@ -88,7 +88,7 @@ public:
             // Import from file
             std::ifstream file(m_importFilename, std::ios::in | std::ios::binary);
             if (!file.is_open()) {
-                throw NoriException("Cannot open file %s", m_importFilename.c_str());
+                throw TracerException("Cannot open file %s", m_importFilename.c_str());
             }
 	        cout << "Importing QTable ...";
 	        cout.flush();
@@ -286,7 +286,7 @@ public:
         if (m_exportFilename.length() > 0) {
             std::ofstream file(m_exportFilename, std::ios::binary | std::ios::out);
             if (!file.is_open()) {
-                throw NoriException("Cannot open file %s to write", m_importFilename.c_str());
+                throw TracerException("Cannot open file %s to write", m_importFilename.c_str());
             }
             // Export to the file
             std::cout << "Exporting QTableSphere to " << m_exportFilename << " ... ";
@@ -384,22 +384,22 @@ public:
         /* No parameters this time */
     }
 
-    void addChild(NoriObject *obj) {
+    void addChild(TracerObject *obj) {
         switch (obj->getClassType()) {
         case EGuider:
             if (m_guider)
-                throw NoriException("There can only be one guider per integrator!");
+                throw TracerException("There can only be one guider per integrator!");
             m_guider = dynamic_cast<QTableSphereGuider*>(obj);
             break;
         default:
-            throw NoriException("PathGuidedIntegrator::addChild(<%s>) is not supported!",
+            throw TracerException("PathGuidedIntegrator::addChild(<%s>) is not supported!",
                 classTypeName(obj->getClassType()));
         }
     }
 
     void activate() {
         if (!m_guider)
-            throw NoriException("No guider was specified!");
+            throw TracerException("No guider was specified!");
     }
 
     void preprocess(const Scene *scene) {
@@ -444,6 +444,6 @@ protected:
     QTableSphereGuider* m_guider = nullptr;
 };
 
-NORI_REGISTER_CLASS(QTableSphereGuider, "qtable_sphere");
-NORI_REGISTER_CLASS(QTableVisualizationIntegrator, "qtable_visualization");
-NORI_NAMESPACE_END
+TRACER_REGISTER_CLASS(QTableSphereGuider, "qtable_sphere");
+TRACER_REGISTER_CLASS(QTableVisualizationIntegrator, "qtable_visualization");
+TRACER_NAMESPACE_END

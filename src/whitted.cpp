@@ -4,7 +4,7 @@
 #include <tracer/sampler.h>
 #include <tracer/bsdf.h>
 
-NORI_NAMESPACE_BEGIN
+TRACER_NAMESPACE_BEGIN
 
 class WhittedIntegrator : public Integrator {
 public:
@@ -46,5 +46,5 @@ public:
 	}
 };
 
-NORI_REGISTER_CLASS(WhittedIntegrator, "whitted");
-NORI_NAMESPACE_END
+TRACER_REGISTER_CLASS(WhittedIntegrator, "whitted");
+TRACER_NAMESPACE_END

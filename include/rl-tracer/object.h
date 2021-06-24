@@ -1,13 +1,13 @@
 /*
-    This file is part of Nori, a simple educational ray tracer
+    This file is part of Tracer, a simple educational ray tracer
 
     Copyright (c) 2015 by Wenzel Jakob
 
-    Nori is free software; you can redistribute it and/or modify
+    [redacted] is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License Version 3
     as published by the Free Software Foundation.
 
-    Nori is distributed in the hope that it will be useful,
+    [redacted] is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
     GNU General Public License for more details.
@@ -20,15 +20,15 @@
 
 #include <tracer/proplist.h>
 
-NORI_NAMESPACE_BEGIN
+TRACER_NAMESPACE_BEGIN
 
 /**
  * \brief Base class of all objects
  *
- * A Nori object represents an instance that is part of
+ * A [redacted] object represents an instance that is part of
  * a scene description, e.g. a scattering model or emitter.
  */
-class NoriObject {
+class TracerObject {
 public:
     enum EClassType {
         EScene = 0,
@@ -47,7 +47,7 @@ public:
     };
 
     /// Virtual destructor
-    virtual ~NoriObject() { }
+    virtual ~TracerObject() { }
 
     /**
      * \brief Return the type of object (i.e. Mesh/BSDF/etc.) 
@@ -61,7 +61,7 @@ public:
      * The default implementation does not support children and
      * simply throws an exception
      */
-    virtual void addChild(NoriObject *child);
+    virtual void addChild(TracerObject *child);
 
     /**
      * \brief Set the parent object
@@ -70,7 +70,7 @@ public:
      * notified when they are added to a parent object. The
      * default implementation does nothing.
      */
-    virtual void setParent(NoriObject *parent);
+    virtual void setParent(TracerObject *parent);
 
     /**
      * \brief Perform some action associated with the object
@@ -106,19 +106,19 @@ public:
 };
 
 /**
- * \brief Factory for Nori objects
+ * \brief Factory for [redacted] objects
  *
  * This utility class is part of a mini-RTTI framework and can 
- * instantiate arbitrary Nori objects by their name.
+ * instantiate arbitrary [redacted] objects by their name.
  */
-class NoriObjectFactory {
+class TracerObjectFactory {
 public:
-    typedef std::function<NoriObject *(const PropertyList &)> Constructor;
+    typedef std::function<TracerObject *(const PropertyList &)> Constructor;
 
     /**
      * \brief Register an object constructor with the object factory
      *
-     * This function is called by the macro \ref NORI_REGISTER_CLASS
+     * This function is called by the macro \ref TRACER_REGISTER_CLASS
      *
      * \param name
      *     An internal name that is associated with this class. This is the
@@ -141,25 +141,25 @@ public:
      *     A list of properties that will be passed to the constructor
      *     of the class.
      */
-    static NoriObject *createInstance(const std::string &name,
+    static TracerObject *createInstance(const std::string &name,
             const PropertyList &propList) {
         if (!m_constructors || m_constructors->find(name) == m_constructors->end())
-            throw NoriException("A constructor for class \"%s\" could not be found!", name);
+            throw TracerException("A constructor for class \"%s\" could not be found!", name);
         return (*m_constructors)[name](propList);
     }
 private:
     static std::map<std::string, Constructor> *m_constructors;
 };
 
-/// Macro for registering an object constructor with the \ref NoriObjectFactory
-#define NORI_REGISTER_CLASS(cls, name) \
+/// Macro for registering an object constructor with the \ref TracerObjectFactory
+#define TRACER_REGISTER_CLASS(cls, name) \
     cls *cls ##_create(const PropertyList &list) { \
         return new cls(list); \
     } \
     static struct cls ##_{ \
         cls ##_() { \
-            NoriObjectFactory::registerClass(name, cls ##_create); \
+            TracerObjectFactory::registerClass(name, cls ##_create); \
         } \
-    } cls ##__NORI_;
+    } cls ##__TRACER_;
 
-NORI_NAMESPACE_END
+TRACER_NAMESPACE_END

@@ -1,6 +1,6 @@
-### Overview of dependency libraries used by Nori
+### Overview of dependency libraries used by Tracer
 
-Nori requires several utility libraries to function correctly; a full list with
+[redacted] requires several utility libraries to function correctly; a full list with
 explanations is given below. You should feel free to use any of their
 functionality in your own submissions—however, you are not required to do so.
 

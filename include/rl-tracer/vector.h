@@ -1,13 +1,13 @@
 /*
-    This file is part of Nori, a simple educational ray tracer
+    This file is part of Tracer, a simple educational ray tracer
 
     Copyright (c) 2015 by Wenzel Jakob
 
-    Nori is free software; you can redistribute it and/or modify
+    [redacted] is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License Version 3
     as published by the Free Software Foundation.
 
-    Nori is distributed in the hope that it will be useful,
+    [redacted] is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
     GNU General Public License for more details.
@@ -20,13 +20,13 @@
 
 #include <tracer/common.h>
 
-NORI_NAMESPACE_BEGIN
+TRACER_NAMESPACE_BEGIN
 
 /* ===================================================================
     This file contains a few templates and specializations, which
     provide 2/3D points, vectors, and normals over different
     underlying data types. Points, vectors, and normals are distinct
-    in Nori, because they transform differently under homogeneous
+    in Tracer, because they transform differently under homogeneous
     coordinate transformations.
  * =================================================================== */
 
@@ -166,4 +166,4 @@ public:
 /// Complete the set {a} to an orthonormal base
 extern void coordinateSystem(const Vector3f &a, Vector3f &b, Vector3f &c);
 
-NORI_NAMESPACE_END
+TRACER_NAMESPACE_END

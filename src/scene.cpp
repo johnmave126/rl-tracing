@@ -1,13 +1,13 @@
 /*
-    This file is part of Nori, a simple educational ray tracer
+    This file is part of Tracer, a simple educational ray tracer
 
     Copyright (c) 2015 by Wenzel Jakob
 
-    Nori is free software; you can redistribute it and/or modify
+    [redacted] is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License Version 3
     as published by the Free Software Foundation.
 
-    Nori is distributed in the hope that it will be useful,
+    [redacted] is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
     GNU General Public License for more details.
@@ -24,7 +24,7 @@
 #include <tracer/emitter.h>
 #include <tracer/timer.h>
 
-NORI_NAMESPACE_BEGIN
+TRACER_NAMESPACE_BEGIN
 
 Scene::Scene(const PropertyList &props) {
     m_accel = new Accel();
@@ -42,14 +42,14 @@ void Scene::activate() {
     m_accel->build();
 
     if (!m_integrator)
-        throw NoriException("No integrator was specified!");
+        throw TracerException("No integrator was specified!");
     if (!m_camera)
-        throw NoriException("No camera was specified!");
+        throw TracerException("No camera was specified!");
     
     if (!m_sampler) {
         /* Create a default (independent) sampler */
         m_sampler = static_cast<Sampler*>(
-            NoriObjectFactory::createInstance("independent", PropertyList()));
+            TracerObjectFactory::createInstance("independent", PropertyList()));
     }
     for (auto it = m_meshes.begin(); it != m_meshes.end(); ++it) {
         if ((*it)->isEmitter()) {
@@ -78,7 +78,7 @@ const Emitter* Scene::sampleEmitter(const float& sample, float &pdf) const {
 	return sampleEmitter(s, pdf);
 }
 
-void Scene::addChild(NoriObject *obj) {
+void Scene::addChild(TracerObject *obj) {
     switch (obj->getClassType()) {
         case EMesh: {
                 Mesh *mesh = static_cast<Mesh *>(obj);
@@ -90,30 +90,30 @@ void Scene::addChild(NoriObject *obj) {
         case EEmitter: {
                 //Emitter *emitter = static_cast<Emitter *>(obj);
                 /* TBD */
-                throw NoriException("Scene::addChild(): You need to implement this for emitters");
+                throw TracerException("Scene::addChild(): You need to implement this for emitters");
             }
             break;
 
         case ESampler:
             if (m_sampler)
-                throw NoriException("There can only be one sampler per scene!");
+                throw TracerException("There can only be one sampler per scene!");
             m_sampler = static_cast<Sampler *>(obj);
             break;
 
         case ECamera:
             if (m_camera)
-                throw NoriException("There can only be one camera per scene!");
+                throw TracerException("There can only be one camera per scene!");
             m_camera = static_cast<Camera *>(obj);
             break;
         
         case EIntegrator:
             if (m_integrator)
-                throw NoriException("There can only be one integrator per scene!");
+                throw TracerException("There can only be one integrator per scene!");
             m_integrator = static_cast<Integrator *>(obj);
             break;
 
         default:
-            throw NoriException("Scene::addChild(<%s>) is not supported!",
+            throw TracerException("Scene::addChild(<%s>) is not supported!",
                 classTypeName(obj->getClassType()));
     }
 }
@@ -142,5 +142,5 @@ std::string Scene::toString() const {
     );
 }
 
-NORI_REGISTER_CLASS(Scene, "scene");
-NORI_NAMESPACE_END
+TRACER_REGISTER_CLASS(Scene, "scene");
+TRACER_NAMESPACE_END

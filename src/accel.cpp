@@ -1,13 +1,13 @@
 /*
-    This file is part of Nori, a simple educational ray tracer
+    This file is part of Tracer, a simple educational ray tracer
 
     Copyright (c) 2015 by Wenzel Jakob
 
-    Nori is free software; you can redistribute it and/or modify
+    [redacted] is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License Version 3
     as published by the Free Software Foundation.
 
-    Nori is distributed in the hope that it will be useful,
+    [redacted] is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
     GNU General Public License for more details.
@@ -31,7 +31,7 @@
  * =======================================================================
  */
 
-NORI_NAMESPACE_BEGIN
+TRACER_NAMESPACE_BEGIN
 
 /* Bin data structure for counting triangles and computing their bounding box */
 struct Bins {
@@ -343,7 +343,7 @@ void Accel::build() {
     m_indices.resize(size);
 
     if (sizeof(BVHNode) != 32)
-        throw NoriException("BVH Node is not packed! Investigate compiler settings.");
+        throw TracerException("BVH Node is not packed! Investigate compiler settings.");
 
     for (uint32_t i = 0; i < size; ++i)
         m_indices[i] = i;
@@ -504,4 +504,4 @@ bool Accel::rayIntersect(const Ray3f &_ray, Intersection &its, bool shadowRay) c
 }
 
 
-NORI_NAMESPACE_END
+TRACER_NAMESPACE_END

@@ -1,13 +1,13 @@
 /*
-    This file is part of Nori, a simple educational ray tracer
+    This file is part of Tracer, a simple educational ray tracer
 
     Copyright (c) 2015 by Wenzel Jakob
 
-    Nori is free software; you can redistribute it and/or modify
+    [redacted] is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License Version 3
     as published by the Free Software Foundation.
 
-    Nori is distributed in the hope that it will be useful,
+    [redacted] is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
     GNU General Public License for more details.
@@ -23,7 +23,7 @@
 #include <tracer/bbox.h>
 #include <tracer/dpdf.h>
 
-NORI_NAMESPACE_BEGIN
+TRACER_NAMESPACE_BEGIN
 
 /**
  * \brief Intersection data structure
@@ -72,7 +72,7 @@ struct Intersection {
  * the specifics of how to create its contents (e.g. by loading from an
  * external file)
  */
-class Mesh : public NoriObject {
+class Mesh : public TracerObject {
 public:
     /// Release all memory
     virtual ~Mesh();
@@ -159,7 +159,7 @@ public:
     const BSDF *getBSDF() const { return m_bsdf; }
 
     /// Register a child object (e.g. a BSDF) with the mesh
-    virtual void addChild(NoriObject *child);
+    virtual void addChild(TracerObject *child);
 
     /// Return the name of this mesh
     const std::string &getName() const { return m_name; }
@@ -190,4 +190,4 @@ protected:
     DiscretePDF   m_facepdf;             ///< PDF of choosing a face uniformly
 };
 
-NORI_NAMESPACE_END
+TRACER_NAMESPACE_END

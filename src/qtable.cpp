@@ -9,7 +9,7 @@
 #include <tbb/concurrent_vector.h>
 #include <tbb/concurrent_hash_map.h>
 
-NORI_NAMESPACE_BEGIN
+TRACER_NAMESPACE_BEGIN
 
 class QTableGuider : public Guider {
 protected:
@@ -41,7 +41,7 @@ public:
             m_alpha = props.getFloat("alpha");
             m_useVisit = false;
         }
-        catch (NoriException e) {
+        catch (TracerException e) {
             //alpha doesn't exist
         }
     }
@@ -360,5 +360,5 @@ protected:
 
 };
 
-NORI_REGISTER_CLASS(QTableGuider, "qtable");
-NORI_NAMESPACE_END
+TRACER_REGISTER_CLASS(QTableGuider, "qtable");
+TRACER_NAMESPACE_END

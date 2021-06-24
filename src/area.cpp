@@ -1,7 +1,7 @@
 #include <tracer/emitter.h>
 #include <tracer/mesh.h>
 
-NORI_NAMESPACE_BEGIN
+TRACER_NAMESPACE_BEGIN
 
 class AreaLight : public Emitter {
 public:
@@ -11,7 +11,7 @@ public:
 
     Color3f sample(const Point3f& origin, const Point2f& sample, Point3f &p, Frame &nFrame, float &pdf) const {
         if (!m_mesh)
-            throw NoriException("AreaLight must be a children of some mesh");
+            throw TracerException("AreaLight must be a children of some mesh");
         m_mesh->samplePosition(sample, p, nFrame, pdf);
 		return getRadiance(p, nFrame.toLocal(origin - p).normalized());
     }
@@ -33,7 +33,7 @@ public:
 			"]", m_radiance.toString());
     }
 
-    void setParent(NoriObject *parent) {
+    void setParent(TracerObject *parent) {
         m_mesh = dynamic_cast<const Mesh*>(parent);
     }
 
@@ -42,5 +42,5 @@ protected:
     Color3f m_radiance;
 };
 
-NORI_REGISTER_CLASS(AreaLight, "area");
-NORI_NAMESPACE_END
+TRACER_REGISTER_CLASS(AreaLight, "area");
+TRACER_NAMESPACE_END

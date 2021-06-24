@@ -1,13 +1,13 @@
 /*
-    This file is part of Nori, a simple educational ray tracer
+    This file is part of Tracer, a simple educational ray tracer
 
     Copyright (c) 2015 by Wenzel Jakob
 
-    Nori is free software; you can redistribute it and/or modify
+    [redacted] is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License Version 3
     as published by the Free Software Foundation.
 
-    Nori is distributed in the hope that it will be useful,
+    [redacted] is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
     GNU General Public License for more details.
@@ -20,7 +20,7 @@
 
 #include <tracer/vector.h>
 
-NORI_NAMESPACE_BEGIN
+TRACER_NAMESPACE_BEGIN
 
 /**
  * \brief Simple n-dimensional ray segment data structure
@@ -31,7 +31,7 @@ NORI_NAMESPACE_BEGIN
  * That is just done for convenience, as these values are frequently required.
  *
  * \remark Important: be careful when changing the ray direction. You must
- * call \ref update() to compute the componentwise reciprocals as well, or Nori's
+ * call \ref update() to compute the componentwise reciprocals as well, or Tracer's
  * ray-triangle intersection code will go haywire.
  */
 template <typename _PointType, typename _VectorType> struct TRay {
@@ -98,4 +98,4 @@ template <typename _PointType, typename _VectorType> struct TRay {
     }
 };
 
-NORI_NAMESPACE_END
+TRACER_NAMESPACE_END

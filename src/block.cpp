@@ -1,13 +1,13 @@
 /*
-    This file is part of Nori, a simple educational ray tracer
+    This file is part of Tracer, a simple educational ray tracer
 
     Copyright (c) 2015 by Wenzel Jakob
 
-    Nori is free software; you can redistribute it and/or modify
+    [redacted] is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License Version 3
     as published by the Free Software Foundation.
 
-    Nori is distributed in the hope that it will be useful,
+    [redacted] is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
     GNU General Public License for more details.
@@ -22,7 +22,7 @@
 #include <tracer/bbox.h>
 #include <tbb/tbb.h>
 
-NORI_NAMESPACE_BEGIN
+TRACER_NAMESPACE_BEGIN
 
 ImageBlock::ImageBlock(const Vector2i &size, const ReconstructionFilter *filter) 
         : m_offset(0, 0), m_size(size) {
@@ -30,13 +30,13 @@ ImageBlock::ImageBlock(const Vector2i &size, const ReconstructionFilter *filter)
         /* Tabulate the image reconstruction filter for performance reasons */
         m_filterRadius = filter->getRadius();
         m_borderSize = (int) std::ceil(m_filterRadius - 0.5f);
-        m_filter = new float[NORI_FILTER_RESOLUTION + 1];
-        for (int i=0; i<NORI_FILTER_RESOLUTION; ++i) {
-            float pos = (m_filterRadius * i) / NORI_FILTER_RESOLUTION;
+        m_filter = new float[TRACER_FILTER_RESOLUTION + 1];
+        for (int i=0; i<TRACER_FILTER_RESOLUTION; ++i) {
+            float pos = (m_filterRadius * i) / TRACER_FILTER_RESOLUTION;
             m_filter[i] = filter->eval(pos);
         }
-        m_filter[NORI_FILTER_RESOLUTION] = 0.0f;
-        m_lookupFactor = NORI_FILTER_RESOLUTION / m_filterRadius;
+        m_filter[TRACER_FILTER_RESOLUTION] = 0.0f;
+        m_lookupFactor = TRACER_FILTER_RESOLUTION / m_filterRadius;
         int weightSize = (int) std::ceil(2*m_filterRadius) + 1;
         m_weightsX = new float[weightSize];
         m_weightsY = new float[weightSize];
@@ -64,7 +64,7 @@ Bitmap *ImageBlock::toBitmap() const {
 
 void ImageBlock::fromBitmap(const Bitmap &bitmap) {
     if (bitmap.cols() != cols() || bitmap.rows() != rows())
-        throw NoriException("Invalid bitmap dimensions!");
+        throw TracerException("Invalid bitmap dimensions!");
 
     for (int y=0; y<m_size.y(); ++y)
         for (int x=0; x<m_size.x(); ++x)
@@ -172,4 +172,4 @@ bool BlockGenerator::next(ImageBlock &block) {
     return true;
 }
 
-NORI_NAMESPACE_END
+TRACER_NAMESPACE_END

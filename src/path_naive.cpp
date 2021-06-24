@@ -6,7 +6,7 @@
 #include <tracer/sampler.h>
 #include <tracer/warp.h>
 
-NORI_NAMESPACE_BEGIN
+TRACER_NAMESPACE_BEGIN
 
 class PathNaiveIntegrator : public Integrator {
 public:
@@ -55,5 +55,5 @@ public:
 	}
 };
 
-NORI_REGISTER_CLASS(PathNaiveIntegrator, "path_naive");
-NORI_NAMESPACE_END
+TRACER_REGISTER_CLASS(PathNaiveIntegrator, "path_naive");
+TRACER_NAMESPACE_END

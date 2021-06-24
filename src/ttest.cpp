@@ -1,13 +1,13 @@
 /*
-    This file is part of Nori, a simple educational ray tracer
+    This file is part of Tracer, a simple educational ray tracer
 
     Copyright (c) 2015 by Wenzel Jakob
 
-    Nori is free software; you can redistribute it and/or modify
+    [redacted] is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License Version 3
     as published by the Free Software Foundation.
 
-    Nori is distributed in the hope that it will be useful,
+    [redacted] is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
     GNU General Public License for more details.
@@ -33,7 +33,7 @@
  * =======================================================================
  */
 
-NORI_NAMESPACE_BEGIN
+TRACER_NAMESPACE_BEGIN
 
 /**
  * Student's t-test for the equality of means
@@ -55,7 +55,7 @@ NORI_NAMESPACE_BEGIN
  * 2. that the average radiance received by a camera within some scene
  *    matches a given value (modulo noise).
  */
-class StudentsTTest : public NoriObject {
+class StudentsTTest : public TracerObject {
 public:
     StudentsTTest(const PropertyList &propList) {
         /* The null hypothesis will be rejected when the associated
@@ -83,7 +83,7 @@ public:
             delete scene;
     }
 
-    void addChild(NoriObject *obj) {
+    void addChild(TracerObject *obj) {
         switch (obj->getClassType()) {
             case EBSDF:
                 m_bsdfs.push_back(static_cast<BSDF *>(obj));
@@ -94,7 +94,7 @@ public:
                 break;
 
             default:
-                throw NoriException("StudentsTTest::addChild(<%s>) is not supported!",
+                throw TracerException("StudentsTTest::addChild(<%s>) is not supported!",
                     classTypeName(obj->getClassType()));
         }
     }
@@ -106,9 +106,9 @@ public:
 
         if (!m_bsdfs.empty()) {
             if (m_references.size() * m_bsdfs.size() != m_angles.size())
-                throw NoriException("Specified a different number of angles and reference values!");
+                throw TracerException("Specified a different number of angles and reference values!");
             if (!m_scenes.empty())
-                throw NoriException("Cannot test BSDFs and scenes at the same time!");
+                throw TracerException("Cannot test BSDFs and scenes at the same time!");
 
             /* Test each registered BSDF */
             int ctr = 0;
@@ -146,10 +146,10 @@ public:
             }
         } else {
             if (m_references.size() != m_scenes.size())
-                throw NoriException("Specified a different number of scenes and reference values!");
+                throw TracerException("Specified a different number of scenes and reference values!");
 
             Sampler *sampler = static_cast<Sampler *>(
-                NoriObjectFactory::createInstance("independent", PropertyList()));
+                TracerObjectFactory::createInstance("independent", PropertyList()));
 
             int ctr = 0;
             for (auto scene : m_scenes) {
@@ -216,5 +216,5 @@ private:
     int m_sampleCount;
 };
 
-NORI_REGISTER_CLASS(StudentsTTest, "ttest");
-NORI_NAMESPACE_END
+TRACER_REGISTER_CLASS(StudentsTTest, "ttest");
+TRACER_NAMESPACE_END

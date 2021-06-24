@@ -1,13 +1,13 @@
 /*
-    This file is part of Nori, a simple educational ray tracer
+    This file is part of Tracer, a simple educational ray tracer
 
     Copyright (c) 2015 by Wenzel Jakob
 
-    Nori is free software; you can redistribute it and/or modify
+    [redacted] is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License Version 3
     as published by the Free Software Foundation.
 
-    Nori is distributed in the hope that it will be useful,
+    [redacted] is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
     GNU General Public License for more details.
@@ -20,18 +20,18 @@
 
 #include <tracer/object.h>
 
-NORI_NAMESPACE_BEGIN
+TRACER_NAMESPACE_BEGIN
 
 /**
  * \brief Generic camera interface
  * 
- * This class provides an abstract interface to cameras in Nori and
+ * This class provides an abstract interface to cameras in [redacted] and
  * exposes the ability to sample their response function. By default, only
  * a perspective camera implementation exists, but you may choose to
  * implement other types (e.g. an environment camera, or a physically-based 
  * camera model that simulates the behavior actual lenses)
  */
-class Camera : public NoriObject {
+class Camera : public TracerObject {
 public:
     /**
      * \brief Importance sample a ray according to the camera's response function
@@ -73,4 +73,4 @@ protected:
     ReconstructionFilter *m_rfilter;
 };
 
-NORI_NAMESPACE_END
+TRACER_NAMESPACE_END

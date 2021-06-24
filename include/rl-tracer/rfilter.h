@@ -1,13 +1,13 @@
 /*
-    This file is part of Nori, a simple educational ray tracer
+    This file is part of Tracer, a simple educational ray tracer
 
     Copyright (c) 2015 by Wenzel Jakob
 
-    Nori is free software; you can redistribute it and/or modify
+    [redacted] is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License Version 3
     as published by the Free Software Foundation.
 
-    Nori is distributed in the hope that it will be useful,
+    [redacted] is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
     GNU General Public License for more details.
@@ -21,14 +21,14 @@
 #include <tracer/object.h>
 
 /// Reconstruction filters will be tabulated at this resolution
-#define NORI_FILTER_RESOLUTION 32
+#define TRACER_FILTER_RESOLUTION 32
 
-NORI_NAMESPACE_BEGIN
+TRACER_NAMESPACE_BEGIN
 
 /**
  * \brief Generic radially symmetric image reconstruction filter
  *
- * When adding radiance-valued samples to the rendered image, Nori
+ * When adding radiance-valued samples to the rendered image, Tracer
  * first convolves them with a so-called image reconstruction filter.
  *
  * To learn more about reconstruction filters and sampling theory
@@ -37,7 +37,7 @@ NORI_NAMESPACE_BEGIN
  *
  * http://graphics.stanford.edu/~mmp/chapters/pbrt_chapter7.pdf
  */
-class ReconstructionFilter : public NoriObject {
+class ReconstructionFilter : public TracerObject {
 public:
     /// Return the filter radius in fractional pixels
     float getRadius() const { return m_radius; }
@@ -54,4 +54,4 @@ protected:
     float m_radius;
 };
 
-NORI_NAMESPACE_END
+TRACER_NAMESPACE_END

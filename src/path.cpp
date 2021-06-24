@@ -5,7 +5,7 @@
 #include <tracer/mesh.h>
 #include <tracer/sampler.h>
 
-NORI_NAMESPACE_BEGIN
+TRACER_NAMESPACE_BEGIN
 
 class PathIntegrator : public Integrator {
 public:
@@ -90,5 +90,5 @@ public:
 	}
 };
 
-NORI_REGISTER_CLASS(PathIntegrator, "path");
-NORI_NAMESPACE_END
+TRACER_REGISTER_CLASS(PathIntegrator, "path");
+TRACER_NAMESPACE_END
